@@ -42,10 +42,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 namespace io = boost::iostreams;
 
-
-
-
-
 namespace mysql
 {
 
