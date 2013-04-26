@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "value.h"
 #include "binlog_event.h"
 #include <iomanip>
-#include <boost/format.hpp>
 
 using namespace mysql;
 using namespace mysql::system;
