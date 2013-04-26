@@ -18,13 +18,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
+#include <iostream>
 #include "binlog_event.h"
 #include "basic_transaction_parser.h"
 #include "protocol.h"
 #include "value.h"
-#include <boost/any.hpp>
-#include <boost/lexical_cast.hpp>
-#include <iostream>
 #include "field_iterator.h"
 
 namespace mysql {
