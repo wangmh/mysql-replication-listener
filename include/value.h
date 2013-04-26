@@ -82,7 +82,7 @@ public:
 
     ~Value() {}
 
-    void is_null(bool s) { m_is_null= s; }
+    void is_null(bool s) { m_is_null = s; }
     bool is_null(void) const { return m_is_null; }
 
     const char *storage() const { return m_storage; }
