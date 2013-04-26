@@ -40,8 +40,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "rowset.h"
 #include "access_method_factory.h"
 
-namespace io = boost::iostreams;
-
 namespace mysql
 {
 
