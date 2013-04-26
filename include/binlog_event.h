@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _BINLOG_EVENT_H
 #define	_BINLOG_EVENT_H
 
-#include <boost/cstdint.hpp>
 #include <list>
+#include <stdint.h>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <vector>
@@ -110,13 +110,13 @@ const char* get_event_type_str(Log_event_type type);
 class Log_event_header
 {
 public:
-  boost::uint8_t  marker; // always 0 or 0xFF
-  boost::uint32_t timestamp;
-  boost::uint8_t  type_code;
-  boost::uint32_t server_id;
-  boost::uint32_t event_length;
-  boost::uint32_t next_position;
-  boost::uint16_t flags;
+  uint8_t  marker; // always 0 or 0xFF
+  uint32_t timestamp;
+  uint8_t  type_code;
+  uint32_t server_id;
+  uint32_t event_length;
+  uint32_t next_position;
+  uint16_t flags;
 };
 
 

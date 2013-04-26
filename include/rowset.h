@@ -22,8 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include "field_iterator.h"
 #include "resultset_iterator.h"
-#include <boost/function.hpp>
-#include <boost/iterator.hpp>
 
 using namespace mysql;
 

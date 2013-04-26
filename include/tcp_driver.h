@@ -190,17 +190,17 @@ private:
      * We use this sturcture every time we initiate an async
      * read.
      */
-    boost::uint8_t m_event_header[19];
+    uint8_t m_event_header[19];
 
     /**
      *
      */
-    boost::uint8_t m_net_header[4];
+    uint8_t m_net_header[4];
 
     /**
      *
      */
-    boost::uint8_t m_net_packet[MAX_PACKAGE_SIZE];
+    uint8_t m_net_packet[MAX_PACKAGE_SIZE];
     boost::asio::streambuf m_event_stream_buffer;
     char * m_event_packet;
 
@@ -222,7 +222,7 @@ private:
     std::string m_passwd;
     long m_port;
 
-    boost::uint64_t m_total_bytes_transferred;
+    uint64_t m_total_bytes_transferred;
 
 
 };

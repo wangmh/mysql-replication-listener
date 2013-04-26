@@ -31,8 +31,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <map>
 #include "basic_content_handler.h"
 
-typedef std::pair<boost::uint64_t, mysql::Table_map_event *> Event_index_element;
-typedef std::map<boost::uint64_t, mysql::Table_map_event *> Int2event_map;
+typedef std::pair<uint64_t, mysql::Table_map_event *> Event_index_element;
+typedef std::map<uint64_t, mysql::Table_map_event *> Int2event_map;
 
 class Table_index : public mysql::Content_handler, public Int2event_map
 {
