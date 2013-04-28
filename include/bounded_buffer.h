@@ -37,7 +37,10 @@ public:
   typedef typename container_type::size_type size_type;
   typedef typename container_type::value_type value_type;
 
-  explicit bounded_buffer(size_type capacity) : m_unread(0), m_container(capacity) {}
+  explicit bounded_buffer(size_type capacity) : m_unread(0), m_container(capacity)
+  {
+      pthread_mutex_init(&m_mutex, NULL);
+  }
 
   void push_front(const value_type& item)
   {
@@ -66,13 +69,14 @@ public:
 
   void lock()
   {
-      m_mutex.lock();
+      pthread_mutex_lock(&m_mutex);
   }
 
   void unlock()
   {
-      m_mutex.unlock();
+      pthread_mutex_unlock(&m_mutex);
   }
+
 private:
   bounded_buffer(const bounded_buffer&);              // Disabled copy constructor
   bounded_buffer& operator = (const bounded_buffer&); // Disabled assign operator
@@ -82,7 +86,7 @@ private:
 
   size_type m_unread;
   container_type m_container;
-  boost::mutex m_mutex;
+  pthread_mutex_t m_mutex;
   boost::condition m_not_empty;
   boost::condition m_not_full;
 };
