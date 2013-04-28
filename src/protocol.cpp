@@ -18,11 +18,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 #include <stdint.h>
-#include <boost/array.hpp>
 #include <vector>
+#include <iostream>
 
 #include "protocol.h"
-#include <iostream>
+
 using namespace mysql;
 using namespace mysql::system;
 

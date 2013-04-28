@@ -18,8 +18,8 @@ link_directories(${PROJECT_BINARY_DIR}/lib)
 INCLUDE_DIRECTORIES(asio)
 
 # ---------- Find Boost Headers/Libraries -----------------------
-# SET(Boost_LIBRARY_DIRS "/home/shangyc/local/boost/lib/")
-# SET(Boost_INCLUDE_DIR "/home/shangyc/local/boost/include/")
+SET(Boost_LIBRARY_DIRS "/home/shangyc/local/boost/lib/")
+SET(Boost_INCLUDE_DIR "/home/shangyc/local/boost/include/")
 SET(Boost_DEBUG FALSE)
 SET(Boost_FIND_REQUIRED TRUE)
 SET(Boost_FIND_QUIETLY FALSE)
