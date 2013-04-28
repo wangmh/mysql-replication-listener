@@ -24,8 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <iostream>
 
 #include <boost/iterator/iterator_facade.hpp>
+#include <asio.hpp>
 
-#include <boost/asio.hpp>
 #include "value.h"
 #include "rowset.h"
 #include "row_of_fields.h"
