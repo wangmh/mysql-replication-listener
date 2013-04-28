@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "rowset.h"
 #include "field_iterator.h"
 
-using boost::asio::ip::tcp;
+using asio::ip::tcp;
 using namespace mysql::system;
 using namespace mysql;
 
@@ -87,13 +87,13 @@ static int hash_sha1(uint8_t *output, ...);
   return 0;
 }
 
-tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, const std::string &user, const std::string &passwd, const std::string &host, long port)
+tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const std::string &user, const std::string &passwd, const std::string &host, long port)
 {
 
   tcp::resolver resolver(io_service);
   tcp::resolver::query query(host.c_str(), "0");
 
-  boost::system::error_code error=boost::asio::error::host_not_found;
+  asio::error_code error = asio::error::host_not_found;
 
   if (port == 0)
     port= 3306;
@@ -138,7 +138,7 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
    * 5. Accept OK package from server
    */
 
-  boost::asio::streambuf server_messages;
+  asio::streambuf server_messages;
 
   /*
    * Get package header
@@ -156,7 +156,7 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
   std::streamsize inbuffer=server_messages.in_avail();
   if (inbuffer < 0)
     inbuffer=0;
-  boost::asio::read(*socket, server_messages, boost::asio::transfer_at_least(packet_length - inbuffer));
+  asio::read(*socket, server_messages, asio::transfer_at_least(packet_length - inbuffer));
   std::istream server_stream(&server_messages);
 
   struct st_handshake_package handshake_package;
@@ -199,12 +199,12 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
     write_packet_header(command_packet_header, size, 0); // packet_no= 0
 
     // Send the request.
-    boost::asio::write(*socket,
-                       boost::asio::buffer(command_packet_header, 4),
-                       boost::asio::transfer_at_least(4));
-    boost::asio::write(*socket, server_messages,
-                       boost::asio::transfer_at_least(size));
-  } catch( boost::system::error_code e)
+    asio::write(*socket,
+                       asio::buffer(command_packet_header, 4),
+                       asio::transfer_at_least(4));
+    asio::write(*socket, server_messages,
+                       asio::transfer_at_least(size));
+  } catch( asio::error_code e)
   {
     return 0;
   }
@@ -233,9 +233,9 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
   return socket;
 }
 
-    void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, size_t offset)
+void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, size_t offset)
 {
-  boost::asio::streambuf server_messages;
+  asio::streambuf server_messages;
 
   std::ostream command_request_stream(&server_messages);
 
@@ -256,11 +256,11 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
   write_packet_header(command_packet_header, size, 0);
 
   // Send the request.
-  boost::asio::write(*m_socket,
-                     boost::asio::buffer(command_packet_header, 4),
-                     boost::asio::transfer_at_least(4));
-  boost::asio::write(*m_socket, server_messages,
-                     boost::asio::transfer_at_least(size));
+  asio::write(*m_socket,
+                     asio::buffer(command_packet_header, 4),
+                     asio::transfer_at_least(4));
+  asio::write(*m_socket, server_messages,
+                     asio::transfer_at_least(size));
 
   /*
    Start receiving binlog events.
@@ -279,7 +279,7 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
 /**
  Helper function used to extract the event header from a memory block
  */
-static void proto_event_packet_header(boost::asio::streambuf &event_src, Log_event_header *h)
+static void proto_event_packet_header(asio::streambuf &event_src, Log_event_header *h)
 {
   std::istream is(&event_src);
 
@@ -300,7 +300,7 @@ static void proto_event_packet_header(boost::asio::streambuf &event_src, Log_eve
           >> prot_flags;
 }
 
-void Binlog_tcp_driver::handle_net_packet(const boost::system::error_code& err, std::size_t bytes_transferred)
+void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size_t bytes_transferred)
 {
   if (err)
   {
@@ -370,7 +370,7 @@ void Binlog_tcp_driver::handle_net_packet(const boost::system::error_code& err, 
 
 }
 
-void Binlog_tcp_driver::handle_net_packet_header(const boost::system::error_code& err, std::size_t bytes_transferred)
+void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, std::size_t bytes_transferred)
 {
   if (err)
   {
@@ -403,17 +403,17 @@ void Binlog_tcp_driver::handle_net_packet_header(const boost::system::error_code
   {
     //std::cerr << "event_stream_buffer.size= " << m_event_stream_buffer.size() << std::endl;
     m_waiting_event= new Log_event_header();
-    m_event_packet=  boost::asio::buffer_cast<char *>(m_event_stream_buffer.prepare(packet_length));
+    m_event_packet=  asio::buffer_cast<char *>(m_event_stream_buffer.prepare(packet_length));
     //assert(m_event_stream_buffer.size() == 0);
   }
 
 
-  boost::asio::async_read(*m_socket,
-                          boost::asio::buffer(m_event_packet, packet_length),
+  asio::async_read(*m_socket,
+                          asio::buffer(m_event_packet, packet_length),
                           boost::bind(&Binlog_tcp_driver::handle_net_packet,
                                       this,
-                                      boost::asio::placeholders::error,
-                                      boost::asio::placeholders::bytes_transferred));
+                                      asio::placeholders::error,
+                                      asio::placeholders::bytes_transferred));
 
 }
 
@@ -425,8 +425,8 @@ void Binlog_tcp_driver::handle_net_packet_header(const boost::system::error_code
     /*
      * Send authentication package
      */
-    boost::asio::streambuf auth_request_header;
-    boost::asio::streambuf auth_request;
+    asio::streambuf auth_request_header;
+    asio::streambuf auth_request;
     std::string database("mysql"); // 0 terminated
 
 
@@ -469,10 +469,10 @@ void Binlog_tcp_driver::handle_net_packet_header(const boost::system::error_code
     /*
      *  Send the request.
      */
-    boost::asio::write(*socket, boost::asio::buffer(auth_packet_header, 4),
-                       boost::asio::transfer_at_least(4));
-    boost::asio::write(*socket, auth_request,
-                       boost::asio::transfer_at_least(size));
+    asio::write(*socket, asio::buffer(auth_packet_header, 4),
+                       asio::transfer_at_least(4));
+    asio::write(*socket, auth_request,
+                       asio::transfer_at_least(size));
 
     /*
      * Get server authentication response
@@ -501,7 +501,7 @@ void Binlog_tcp_driver::handle_net_packet_header(const boost::system::error_code
     }
 
     return 0;
-  } catch (boost::system::system_error e)
+  } catch (asio::system_error e)
   {
     // TODO log error; adjust return code
     return 1;
@@ -522,7 +522,7 @@ void Binlog_tcp_driver::start_event_loop()
 {
   while (true)
   {
-    boost::system::error_code err;
+    asio::error_code err;
     int executed_jobs=m_io_service.run(err);
     if (err)
     {
@@ -595,7 +595,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     position we won't know if it succeded because the binlog dump is
     running in another thread asynchronously.
   */
-  boost::asio::io_service io_service;
+  asio::io_service io_service;
   tcp::socket *socket;
 
   if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
@@ -647,7 +647,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
 
 int Binlog_tcp_driver::get_position(std::string *filename_ptr, unsigned long *position_ptr)
 {
-  boost::asio::io_service io_service;
+  asio::io_service io_service;
 
   tcp::socket *socket;
 
@@ -668,7 +668,7 @@ int Binlog_tcp_driver::get_position(std::string *filename_ptr, unsigned long *po
 
 bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned long *position)
 {
-  boost::asio::streambuf server_messages;
+  asio::streambuf server_messages;
 
   std::ostream command_request_stream(&server_messages);
 
@@ -682,8 +682,8 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
   write_packet_header(command_packet_header, size, 0);
 
   // Send the request.
-  boost::asio::write(*socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
-  boost::asio::write(*socket, server_messages, boost::asio::transfer_at_least(size));
+  asio::write(*socket, asio::buffer(command_packet_header, 4), asio::transfer_at_least(4));
+  asio::write(*socket, server_messages, asio::transfer_at_least(size));
 
   Result_set result_set(socket);
 
@@ -701,7 +701,7 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
 
 bool fetch_binlogs_name_and_size(tcp::socket *socket, std::map<std::string, unsigned long> &binlog_map)
 {
-  boost::asio::streambuf server_messages;
+  asio::streambuf server_messages;
 
   std::ostream command_request_stream(&server_messages);
 
@@ -715,8 +715,8 @@ bool fetch_binlogs_name_and_size(tcp::socket *socket, std::map<std::string, unsi
   write_packet_header(command_packet_header, size, 0);
 
   // Send the request.
-  boost::asio::write(*socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
-  boost::asio::write(*socket, server_messages, boost::asio::transfer_at_least(size));
+  asio::write(*socket, asio::buffer(command_packet_header, 4), asio::transfer_at_least(4));
+  asio::write(*socket, server_messages, asio::transfer_at_least(size));
 
   Result_set result_set(socket);
 

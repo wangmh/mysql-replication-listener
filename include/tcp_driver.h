@@ -23,18 +23,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_driver.h"
 #include "bounded_buffer.h"
 #include "protocol.h"
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <boost/thread.hpp>
 
 
 #define MAX_PACKAGE_SIZE 0xffffff
 
 #define GET_NEXT_PACKET_HEADER   \
-   boost::asio::async_read(*m_socket, boost::asio::buffer(m_net_header, 4), \
+   asio::async_read(*m_socket, asio::buffer(m_net_header, 4), \
      boost::bind(&Binlog_tcp_driver::handle_net_packet_header, this, \
-     boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)) \
+     asio::placeholders::error, asio::placeholders::bytes_transferred)) \
 
-using boost::asio::ip::tcp;
+using asio::ip::tcp;
 
 namespace mysql { namespace system {
 
@@ -111,7 +111,7 @@ private:
      * Handles a completed mysql server package header and put a
      * request for the body in the job queue.
      */
-    void handle_net_packet_header(const boost::system::error_code& err, std::size_t bytes_transferred);
+    void handle_net_packet_header(const asio::error_code& err, std::size_t bytes_transferred);
 
     /**
      * Handles a completed network package with the assumption that it contains
@@ -119,7 +119,7 @@ private:
      *
      * TODO rename to handle_event_log_packet?
      */
-    void handle_net_packet(const boost::system::error_code& err, std::size_t bytes_transferred);
+    void handle_net_packet(const asio::error_code& err, std::size_t bytes_transferred);
 
     /**
      * Called from handle_net_packet(). The function handle a stream of bytes
@@ -138,7 +138,7 @@ private:
      * @param bytes_transferred The number of bytes waiting in the event stream
      *
      */
-    void handle_event_packet(const boost::system::error_code& err, std::size_t bytes_transferred);
+    void handle_event_packet(const asio::error_code& err, std::size_t bytes_transferred);
 
     /**
      * Executes io_service in a loop.
@@ -166,7 +166,7 @@ private:
     void shutdown(void);
 
     boost::thread *m_event_loop;
-    boost::asio::io_service m_io_service;
+    asio::io_service m_io_service;
     tcp::socket *m_socket;
     bool m_shutdown;
 
@@ -201,7 +201,7 @@ private:
      *
      */
     uint8_t m_net_packet[MAX_PACKAGE_SIZE];
-    boost::asio::streambuf m_event_stream_buffer;
+    asio::streambuf m_event_stream_buffer;
     char * m_event_packet;
 
     /**
@@ -245,7 +245,7 @@ int authenticate(tcp::socket *socket, const std::string& user,
                  const st_handshake_package &handshake_package);
 
 tcp::socket *
-sync_connect_and_authenticate(boost::asio::io_service &io_service, const std::string &user,
+sync_connect_and_authenticate(asio::io_service &io_service, const std::string &user,
                               const std::string &passwd, const std::string &host, long port);
 
 
