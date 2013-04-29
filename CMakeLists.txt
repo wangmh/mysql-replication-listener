@@ -14,6 +14,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 include_directories(include)
 link_directories(${PROJECT_BINARY_DIR}/lib)
 
+# TODO: order: find asio -> allow to define asio directory -> use include/asio
 # For ASIO headers
 INCLUDE_DIRECTORIES(include/asio)
 
