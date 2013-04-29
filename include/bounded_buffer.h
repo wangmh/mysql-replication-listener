@@ -55,16 +55,19 @@ public:
     m_container.push_front(item);
     ++m_unread;
     pthread_mutex_unlock(&m_mutex);
-    pthread_cond_signal(&m_not_empty);
+    if (m_unread == 1)
+        pthread_cond_signal(&m_not_empty);
   }
 
   void pop_back(value_type* pItem)
   {
     pthread_mutex_lock(&m_mutex);
-    pthread_cond_wait(&m_not_empty, &m_mutex);
+    if (m_unread == 0)
+        pthread_cond_wait(&m_not_empty, &m_mutex);
     *pItem = m_container[--m_unread];
     pthread_mutex_unlock(&m_mutex);
-    pthread_cond_signal(&m_not_full);
+    if (m_unread == m_container.capacity() -1)
+        pthread_cond_signal(&m_not_full);
   }
 
   bool has_unread()
