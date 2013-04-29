@@ -119,11 +119,11 @@ mysql::system::create_transport(const char *url)
 {
   const char *pfx = strchr(url, ':');
   if (pfx == 0) {
-	// file can be not started with "file://" too
-	if (access(url, R_OK) == 0)
-	  return (*url_parser[1].parser)(url, strlen(url));
+    // file can be not started with "file://" too
+    if (access(url, R_OK) == 0)
+      return (*url_parser[1].parser)(url, strlen(url));
     else
-	  return NULL;
+      return NULL;
   }
   for (int i = 0 ; i < sizeof(url_parser)/sizeof(*url_parser) ; ++i)
   {
