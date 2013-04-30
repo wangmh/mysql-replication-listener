@@ -19,16 +19,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 #include "binlog_api.h"
 #include <iostream>
+#include <boost/bind.hpp>
 #include "tcp_driver.h"
-
 
 #include <fstream>
 #include <time.h>
 #include <stdint.h>
 #include <streambuf>
 #include <stdio.h>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
+#include <functional>
+#include <pthread.h>
 #include <exception>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -235,6 +235,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, size_t offset)
 {
   asio::streambuf server_messages;
+  struct Thread_data thread_data;
 
   std::ostream command_request_stream(&server_messages);
 
@@ -270,9 +271,11 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
   /*
    Start the event loop in a new thread
    */
-  if (!m_event_loop)
-    m_event_loop= new boost::thread(boost::bind(&Binlog_tcp_driver::start_event_loop, this));
-
+  if (!m_event_loop) {
+      thread_data.tcp_driver = this;
+      m_event_loop = (pthread_t *)malloc(sizeof(pthread_t));
+      pthread_create(m_event_loop, NULL, &Binlog_tcp_driver::start, (void *)&thread_data);
+  }
 }
 
 /**
@@ -517,6 +520,13 @@ int Binlog_tcp_driver::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   return 0;
 }
 
+void *Binlog_tcp_driver::start(void *data)
+{
+   Thread_data *thread_data = (Thread_data *)data;
+   thread_data->tcp_driver->start_event_loop();
+   return NULL;
+}
+
 void Binlog_tcp_driver::start_event_loop()
 {
   while (true)
@@ -628,8 +638,8 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
   m_io_service.post(boost::bind(&Binlog_tcp_driver::shutdown, this));
   if (m_event_loop)
   {
-    m_event_loop->join();
-    delete(m_event_loop);
+    pthread_join(*m_event_loop, NULL);
+    free(m_event_loop);
   }
   m_event_loop= 0;
   disconnect();

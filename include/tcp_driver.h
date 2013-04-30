@@ -20,12 +20,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #ifndef _TCP_DRIVER_H
 #define	_TCP_DRIVER_H
+
+#include <asio.hpp>
+#include <pthread.h>
+#include <functional>
+#include <boost/bind.hpp>
+
 #include "binlog_driver.h"
 #include "bounded_buffer.h"
 #include "protocol.h"
-#include <asio.hpp>
-#include <boost/thread.hpp>
-
 
 #define MAX_PACKAGE_SIZE 0xffffff
 
@@ -78,6 +81,8 @@ public:
     const std::string& password() const { return m_passwd; }
     const std::string& host() const { return m_host; }
     unsigned long port() const { return m_port; }
+
+    static void *start(void *data);
 
 protected:
     /**
@@ -165,7 +170,7 @@ private:
      */
     void shutdown(void);
 
-    boost::thread *m_event_loop;
+    pthread_t *m_event_loop;
     asio::io_service m_io_service;
     tcp::socket *m_socket;
     bool m_shutdown;
@@ -225,6 +230,10 @@ private:
     uint64_t m_total_bytes_transferred;
 
 
+};
+
+struct Thread_data {
+    Binlog_tcp_driver *tcp_driver;
 };
 
 /**
