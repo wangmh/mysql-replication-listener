@@ -44,7 +44,7 @@ Row_of_fields& Row_of_fields::operator=(Row_of_fields &right)
   if (size() != right.size())
     throw std::length_error("Row dimension doesn't match.");
   int i= 0;
-  for(std::vector<Value>::const_iterator it=right.begin(); it != right.end(); it++)
+  for(std::vector<Value>::iterator it=right.begin(); it != right.end(); it++)
   {
     this->assign(++i, *it);
   }

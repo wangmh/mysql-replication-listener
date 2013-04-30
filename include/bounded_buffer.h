@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _BOUNDED_BUFFER_H
 #define	_BOUNDED_BUFFER_H
 
-#include <boost/circular_buffer.hpp>
+#include <deque>
 #include <pthread.h>
 
 template <class T>
@@ -29,7 +29,7 @@ class bounded_buffer
 {
 public:
 
-  typedef boost::circular_buffer<T> container_type;
+  typedef std::deque<T> container_type;
   typedef typename container_type::size_type size_type;
   typedef typename container_type::value_type value_type;
 
@@ -50,7 +50,7 @@ public:
   void push_front(const value_type& item)
   {
     pthread_mutex_lock(&m_mutex);
-    if (m_unread == m_container.capacity())
+    if (m_unread == m_container.size())
         pthread_cond_wait(&m_not_full, &m_mutex);
     m_container.push_front(item);
     ++m_unread;
@@ -66,7 +66,7 @@ public:
         pthread_cond_wait(&m_not_empty, &m_mutex);
     *pItem = m_container[--m_unread];
     pthread_mutex_unlock(&m_mutex);
-    if (m_unread == m_container.capacity() -1)
+    if (m_unread == m_container.size() -1)
         pthread_cond_signal(&m_not_full);
   }
 
@@ -90,7 +90,7 @@ private:
   bounded_buffer& operator = (const bounded_buffer&); // Disabled assign operator
 
   bool is_not_empty() const { return m_unread > 0; }
-  bool is_not_full() const { return m_unread < m_container.capacity(); }
+  bool is_not_full() const { return m_unread < m_container.size(); }
 
   size_type m_unread;
   container_type m_container;
