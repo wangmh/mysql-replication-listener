@@ -24,18 +24,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <asio.hpp>
 #include <pthread.h>
 #include <functional>
-#include <boost/bind.hpp>
 
 #include "binlog_driver.h"
 #include "bounded_buffer.h"
 #include "protocol.h"
 
 #define MAX_PACKAGE_SIZE 0xffffff
-
-#define GET_NEXT_PACKET_HEADER   \
-   asio::async_read(*m_socket, asio::buffer(m_net_header, 4), \
-     boost::bind(&Binlog_tcp_driver::handle_net_packet_header, this, \
-     asio::placeholders::error, asio::placeholders::bytes_transferred)) \
 
 using asio::ip::tcp;
 
@@ -234,6 +228,28 @@ private:
 
 struct Thread_data {
     Binlog_tcp_driver *tcp_driver;
+};
+
+class Read_handler {
+public:
+    void (Binlog_tcp_driver:: *fn)(const asio::error_code& err, std::size_t bytes_transferred);
+    Binlog_tcp_driver *cls;
+
+    void operator()(const asio::error_code& err, std::size_t bytes_transferred)
+    {
+        (cls->*fn)(err, bytes_transferred);
+    }
+};
+
+class Shutdown_handler {
+public:
+    void (Binlog_tcp_driver:: *fn)();
+    Binlog_tcp_driver *cls;
+
+    void operator()()
+    {
+        (cls->*fn)();
+    }
 };
 
 /**

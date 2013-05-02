@@ -21,8 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_api.h"
 
 #include <iostream>
-#include <boost/bind.hpp>
-
 #include <fstream>
 #include <time.h>
 #include <stdint.h>
@@ -267,8 +265,13 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
   /*
    Start receiving binlog events.
    */
-  if (!m_shutdown)
-    GET_NEXT_PACKET_HEADER;
+  if (!m_shutdown) {
+      Read_handler read_handler;
+      read_handler.fn  = &Binlog_tcp_driver::handle_net_packet_header;
+      read_handler.cls = this;
+      asio::async_read(*m_socket, asio::buffer(m_net_header, 4),
+          read_handler);
+  }
 
   /*
    Start the event loop in a new thread
@@ -369,9 +372,13 @@ void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size
     m_waiting_event= 0;
   }
 
-  if (!m_shutdown)
-    GET_NEXT_PACKET_HEADER;
-
+  if (!m_shutdown) {
+      Read_handler read_handler;
+      read_handler.fn  = &Binlog_tcp_driver::handle_net_packet_header;
+      read_handler.cls = this;
+      asio::async_read(*m_socket, asio::buffer(m_net_header, 4),
+          read_handler);
+  }
 }
 
 void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, std::size_t bytes_transferred)
@@ -412,13 +419,12 @@ void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, st
   }
 
 
+  Read_handler read_handler;
+  read_handler.fn  = &Binlog_tcp_driver::handle_net_packet;
+  read_handler.cls = this;
   asio::async_read(*m_socket,
                           asio::buffer(m_event_packet, packet_length),
-                          boost::bind(&Binlog_tcp_driver::handle_net_packet,
-                                      this,
-                                      asio::placeholders::error,
-                                      asio::placeholders::bytes_transferred));
-
+                          read_handler);
 }
 
     int authenticate(tcp::socket *socket, const std::string& user, const std::string& passwd,
@@ -637,7 +643,10 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     By posting to the io service we guarantee that the operations are
     executed in the same thread as the io_service is running in.
   */
-  m_io_service.post(boost::bind(&Binlog_tcp_driver::shutdown, this));
+  Shutdown_handler shutdown_handler;
+  shutdown_handler.fn  = &Binlog_tcp_driver::shutdown;
+  shutdown_handler.cls = this;
+  m_io_service.post(shutdown_handler);
   if (m_event_loop)
   {
     pthread_join(*m_event_loop, NULL);
