@@ -267,8 +267,8 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
    */
   if (!m_shutdown) {
       Read_handler read_handler;
-      read_handler.fn  = &Binlog_tcp_driver::handle_net_packet_header;
-      read_handler.cls = this;
+      read_handler.method     = &Binlog_tcp_driver::handle_net_packet_header;
+      read_handler.tcp_driver = this;
       asio::async_read(*m_socket, asio::buffer(m_net_header, 4),
           read_handler);
   }
@@ -374,8 +374,8 @@ void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size
 
   if (!m_shutdown) {
       Read_handler read_handler;
-      read_handler.fn  = &Binlog_tcp_driver::handle_net_packet_header;
-      read_handler.cls = this;
+      read_handler.method     = &Binlog_tcp_driver::handle_net_packet_header;
+      read_handler.tcp_driver = this;
       asio::async_read(*m_socket, asio::buffer(m_net_header, 4),
           read_handler);
   }
@@ -420,8 +420,8 @@ void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, st
 
 
   Read_handler read_handler;
-  read_handler.fn  = &Binlog_tcp_driver::handle_net_packet;
-  read_handler.cls = this;
+  read_handler.method     = &Binlog_tcp_driver::handle_net_packet;
+  read_handler.tcp_driver = this;
   asio::async_read(*m_socket,
                           asio::buffer(m_event_packet, packet_length),
                           read_handler);
@@ -644,8 +644,8 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     executed in the same thread as the io_service is running in.
   */
   Shutdown_handler shutdown_handler;
-  shutdown_handler.fn  = &Binlog_tcp_driver::shutdown;
-  shutdown_handler.cls = this;
+  shutdown_handler.method     = &Binlog_tcp_driver::shutdown;
+  shutdown_handler.tcp_driver = this;
   m_io_service.post(shutdown_handler);
   if (m_event_loop)
   {

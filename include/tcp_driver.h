@@ -232,23 +232,23 @@ struct Thread_data {
 
 class Read_handler {
 public:
-    void (Binlog_tcp_driver:: *fn)(const asio::error_code& err, std::size_t bytes_transferred);
-    Binlog_tcp_driver *cls;
+    void (Binlog_tcp_driver:: *method)(const asio::error_code& err, std::size_t bytes_transferred);
+    Binlog_tcp_driver *tcp_driver;
 
     void operator()(const asio::error_code& err, std::size_t bytes_transferred)
     {
-        (cls->*fn)(err, bytes_transferred);
+        (tcp_driver->*method)(err, bytes_transferred);
     }
 };
 
 class Shutdown_handler {
 public:
-    void (Binlog_tcp_driver:: *fn)();
-    Binlog_tcp_driver *cls;
+    void (Binlog_tcp_driver:: *method)();
+    Binlog_tcp_driver *tcp_driver;
 
     void operator()()
     {
-        (cls->*fn)();
+        (tcp_driver->*method)();
     }
 };
 
