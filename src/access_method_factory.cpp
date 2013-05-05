@@ -84,6 +84,9 @@ static Binary_log_driver *parse_mysql_url(const char *body, size_t len)
 
 static Binary_log_driver *parse_file_url(const char *body, size_t length)
 {
+  if (access(body, R_OK) == 0)
+    return new Binlog_file_driver(body);
+
   /* Find the beginning of the file name */
   if (strncmp(body, "//", 2) != 0)
     return 0;
