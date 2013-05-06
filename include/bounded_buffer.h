@@ -33,7 +33,7 @@ public:
   typedef typename container_type::size_type size_type;
   typedef typename container_type::value_type value_type;
 
-  explicit bounded_buffer(size_type capacity) : m_unread(0), m_container(capacity)
+  explicit bounded_buffer(size_type capacity) : m_unread(0), m_container(capacity), capacity(capacity)
   {
       pthread_mutex_init(&m_mutex, NULL);
       pthread_cond_init(&m_not_empty, NULL);
@@ -50,9 +50,12 @@ public:
   void push_front(const value_type& item)
   {
     pthread_mutex_lock(&m_mutex);
-    if (m_unread == m_container.size())
+    if (m_unread == capacity)
         pthread_cond_wait(&m_not_full, &m_mutex);
-    m_container.push_front(item);
+    for (int i = m_unread; i > 0; i--) {
+        m_container[i] = m_container[i-1];
+    }
+    m_container[0] = item;
     ++m_unread;
     pthread_mutex_unlock(&m_mutex);
     if (m_unread == 1)
@@ -66,7 +69,7 @@ public:
         pthread_cond_wait(&m_not_empty, &m_mutex);
     *pItem = m_container[--m_unread];
     pthread_mutex_unlock(&m_mutex);
-    if (m_unread == m_container.size() -1)
+    if (m_unread == capacity -1)
         pthread_cond_signal(&m_not_full);
   }
 
@@ -90,8 +93,9 @@ private:
   bounded_buffer& operator = (const bounded_buffer&); // Disabled assign operator
 
   bool is_not_empty() const { return m_unread > 0; }
-  bool is_not_full() const { return m_unread < m_container.size(); }
+  bool is_not_full() const { return m_unread < capacity; }
 
+  size_type capacity;
   size_type m_unread;
   container_type m_container;
   pthread_mutex_t m_mutex;
