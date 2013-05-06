@@ -35,6 +35,11 @@ using asio::ip::tcp;
 
 namespace mysql { namespace system {
 
+class Binlog_tcp_driver;
+struct Thread_data {
+    Binlog_tcp_driver *tcp_driver;
+};
+
 class Binlog_tcp_driver : public Binary_log_driver
 {
 public:
@@ -44,7 +49,7 @@ public:
       : Binary_log_driver("", 4), m_host(host), m_user(user), m_passwd(passwd),
         m_port(port), m_socket(NULL), m_waiting_event(0), m_event_loop(0),
         m_total_bytes_transferred(0), m_shutdown(false),
-        m_event_queue(new bounded_buffer<Binary_log_event*>(50))
+        m_event_queue(new bounded_buffer<Binary_log_event *>(50))
     {
     }
 
@@ -52,6 +57,7 @@ public:
     {
         delete m_event_queue;
         delete m_socket;
+        free(this->thread_data);
     }
 
     /**
@@ -222,12 +228,7 @@ private:
     long m_port;
 
     uint64_t m_total_bytes_transferred;
-
-
-};
-
-struct Thread_data {
-    Binlog_tcp_driver *tcp_driver;
+    struct mysql::system::Thread_data *thread_data;
 };
 
 class Read_handler {

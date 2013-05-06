@@ -59,7 +59,7 @@ public:
         pthread_cond_signal(&m_not_empty);
   }
 
-  void pop_back(value_type* pItem)
+  void pop_back(value_type *pItem)
   {
     pthread_mutex_lock(&m_mutex);
     if (m_unread == 0)

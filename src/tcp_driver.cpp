@@ -235,7 +235,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, size_t offset)
 {
   asio::streambuf server_messages;
-  struct Thread_data thread_data;
+  this->thread_data = (struct Thread_data *)malloc(sizeof(struct Thread_data));
 
   std::ostream command_request_stream(&server_messages);
 
@@ -277,9 +277,9 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
    Start the event loop in a new thread
    */
   if (!m_event_loop) {
-      thread_data.tcp_driver = this;
+      this->thread_data->tcp_driver = this;
       m_event_loop = (pthread_t *)malloc(sizeof(pthread_t));
-      pthread_create(m_event_loop, NULL, &Binlog_tcp_driver::start, (void *)&thread_data);
+      pthread_create(m_event_loop, NULL, &Binlog_tcp_driver::start, (void *)this->thread_data);
   }
 }
 
@@ -523,7 +523,7 @@ int Binlog_tcp_driver::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   // poll for new event until one event is found.
   // return the event
   if (event_ptr)
-    *event_ptr= 0;
+    *event_ptr = 0;
   m_event_queue->pop_back(event_ptr);
   return 0;
 }
