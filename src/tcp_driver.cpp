@@ -312,6 +312,7 @@ void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size
   if (err)
   {
     Binary_log_event * ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+    std::cout << "1:" << err.message() << std::endl;
     m_event_queue->push_front(ev);
     return;
   }
@@ -325,6 +326,7 @@ void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size
        << bytes_transferred
        << " instead.";
     Binary_log_event * ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+    std::cout << "2:" << os.str() << std::endl;
     m_event_queue->push_front(ev);
     return;
   }
@@ -386,6 +388,7 @@ void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, st
   if (err)
   {
     Binary_log_event * ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+    std::cout << "3:" << err.message() << std::endl;
     m_event_queue->push_front(ev);
     return;
   }
@@ -399,6 +402,7 @@ void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, st
        << bytes_transferred
        << " instead.";
     Binary_log_event * ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+    std::cout << "4:" << os.str() << std::endl;
     m_event_queue->push_front(ev);
     return;
   }

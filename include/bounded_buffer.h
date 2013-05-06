@@ -65,7 +65,7 @@ public:
   void pop_back(value_type *pItem)
   {
     pthread_mutex_lock(&m_mutex);
-    if (m_unread == 0)
+    while (m_unread == 0)
         pthread_cond_wait(&m_not_empty, &m_mutex);
     *pItem = m_container[--m_unread];
     pthread_mutex_unlock(&m_mutex);
