@@ -27,8 +27,10 @@ using namespace mysql;
 
 Row_of_fields& Row_of_fields::operator=(const Row_of_fields &right)
 {
-  if (size() != right.size())
-    throw std::length_error("Row dimension doesn't match.");
+  if (size() != right.size()) {
+      this->resize(right.size());
+      //throw std::length_error("Row dimension doesn't match.");
+  }
   int i= 0;
   // Because the parameter passed in is (const Row_of_fields &),
   // begin() will return a const_iterator
@@ -41,8 +43,9 @@ Row_of_fields& Row_of_fields::operator=(const Row_of_fields &right)
 
 Row_of_fields& Row_of_fields::operator=(Row_of_fields &right)
 {
-  if (size() != right.size())
-    throw std::length_error("Row dimension doesn't match.");
+  if (size() != right.size()) {
+      this->resize(right.size());
+  }
   int i= 0;
   for(std::vector<Value>::iterator it=right.begin(); it != right.end(); it++)
   {
