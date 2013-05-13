@@ -21,9 +21,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _VALUE_ADAPTER_H
 #define	_VALUE_ADAPTER_H
 
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 #include "protocol.h"
-#include <boost/any.hpp>
 #include <iostream>
 
 using namespace mysql;
@@ -42,7 +41,7 @@ namespace mysql {
  @return The size in bytes of a particular field
 */
 int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
-                    boost::uint32_t metadata);
+                    uint32_t metadata);
 
 
 /**
@@ -54,7 +53,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
 class Value
 {
 public:
-    Value(enum system::enum_field_types type, boost::uint32_t metadata, const char *storage) :
+    Value(enum system::enum_field_types type, uint32_t metadata, const char *storage) :
       m_type(type), m_storage(storage), m_metadata(metadata), m_is_null(false)
     {
       m_size = calc_field_size((unsigned char)type,
@@ -82,7 +81,7 @@ public:
 
     ~Value() {}
 
-    void is_null(bool s) { m_is_null= s; }
+    void is_null(bool s) { m_is_null = s; }
     bool is_null(void) const { return m_is_null; }
 
     const char *storage() const { return m_storage; }
@@ -93,31 +92,31 @@ public:
      */
     size_t length() const { return m_size; }
     enum system::enum_field_types type() const { return m_type; }
-    boost::uint32_t metadata() const { return m_metadata; }
+    uint32_t metadata() const { return m_metadata; }
 
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
      */
-    boost::int32_t as_int32() const;
+    int32_t as_int32() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int64_t as_int64() const;
+    int64_t as_int64() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int8_t as_int8() const;
+    int8_t as_int8() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int16_t as_int16() const;
+    int16_t as_int16() const;
 
     /**
      * Returns a pointer to the character data of a string type stored
@@ -147,7 +146,7 @@ private:
     enum system::enum_field_types m_type;
     size_t m_size;
     const char *m_storage;
-    boost::uint32_t m_metadata;
+    uint32_t m_metadata;
     bool m_is_null;
 };
 
