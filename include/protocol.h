@@ -20,11 +20,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _PROTOCOL_H
 #define	_PROTOCOL_H
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <list>
 #include "binlog_event.h"
 
-using boost::asio::ip::tcp;
+using asio::ip::tcp;
 namespace mysql {
 namespace system {
 
@@ -34,14 +34,14 @@ namespace system {
 */
 struct st_handshake_package
 {
-  boost::uint8_t     protocol_version;
+  uint8_t     protocol_version;
   std::string server_version_str;
-  boost::uint32_t    thread_id;
-  boost::uint8_t     scramble_buff[8];
-  boost::uint16_t    server_capabilities;
-  boost::uint8_t     server_language;
-  boost::uint16_t    server_status;
-  boost::uint8_t     scramble_buff2[13];
+  uint32_t    thread_id;
+  uint8_t     scramble_buff[8];
+  uint16_t    server_capabilities;
+  uint8_t     server_language;
+  uint16_t    server_status;
+  uint8_t     scramble_buff2[13];
 };
 
 /**
@@ -50,18 +50,18 @@ struct st_handshake_package
 */
 struct st_ok_package
 {
-  boost::uint8_t  result_type;
-  boost::uint64_t affected_rows;
-  boost::uint64_t insert_id;
-  boost::uint16_t server_status;
-  boost::uint16_t warning_count;
+  uint8_t  result_type;
+  uint64_t affected_rows;
+  uint64_t insert_id;
+  uint16_t server_status;
+  uint16_t warning_count;
   std::string  message;
 };
 
 struct st_eof_package
 {
-  boost::uint16_t warning_count;
-  boost::uint16_t status_flags;
+  uint16_t warning_count;
+  uint16_t status_flags;
 };
 
 /**
@@ -70,8 +70,8 @@ struct st_eof_package
 */
 struct st_error_package
 {
-  boost::uint16_t error_code;
-  boost::uint8_t  sql_state[5];
+  uint16_t error_code;
+  uint8_t  sql_state[5];
   std::string  message;
 };
 
@@ -172,7 +172,7 @@ enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
 /*
  * Helper functions
  *
-static void proto_append_int_len(boost::asio::streambuf &buf, unsigned long long num, int len)
+static void proto_append_int_len(asio::streambuf &buf, unsigned long long num, int len)
 {
     std::ostream os(&buf);
     for (int i= 0; i< len; i++)
@@ -201,7 +201,7 @@ static void proto_append_int_len(char *buff, unsigned long long num, int len)
 }
 */
 
-void write_packet_header(char *buff, boost::uint16_t size, boost::uint8_t packet_no);
+void write_packet_header(char *buff, uint16_t size, uint8_t packet_no);
 
 class Protocol_validator;
 class buffer_source;
@@ -305,7 +305,7 @@ private:
 
 std::ostream &operator<<(std::ostream &os, Protocol &chunk);
 
-typedef Protocol_chunk<boost::uint8_t> Protocol_chunk_uint8;
+typedef Protocol_chunk<uint8_t> Protocol_chunk_uint8;
 
 class Protocol_chunk_string //: public Protocol_chunk_uint8
 {
@@ -330,7 +330,7 @@ private:
 class Protocol_chunk_vector : public Protocol_chunk_uint8
 {
 public:
-    Protocol_chunk_vector(std::vector<boost::uint8_t> &chunk, unsigned long size)
+    Protocol_chunk_vector(std::vector<uint8_t> &chunk, unsigned long size)
       : Protocol_chunk_uint8()
     {
         m_vec= &chunk;
@@ -346,7 +346,7 @@ public:
     }
 private:
     friend std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk);
-    std::vector<boost::uint8_t> *m_vec;
+    std::vector<uint8_t> *m_vec;
     unsigned long m_size;
 };
 
@@ -400,7 +400,7 @@ int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length,
  * @retval 0 Success
  * @retval >0 An error occurred
  */
-int proto_read_package_header(tcp::socket *socket, boost::asio::streambuf &buff, unsigned long *packet_length, unsigned char *packet_no);
+int proto_read_package_header(tcp::socket *socket, asio::streambuf &buff, unsigned long *packet_length, unsigned char *packet_no);
 
 /**
  * Get one complete packet from the server
@@ -411,7 +411,7 @@ int proto_read_package_header(tcp::socket *socket, boost::asio::streambuf &buff,
  *
  * @return the size of the packet or 0 to indicate an error
  */
-int proto_get_one_package(tcp::socket *socket, boost::asio::streambuf &buff, boost::uint8_t *packet_no);
+int proto_get_one_package(tcp::socket *socket, asio::streambuf &buff, uint8_t *packet_no);
 void prot_parse_error_message(std::istream &is, struct st_error_package &err, int packet_length);
 void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packet_length);
 void prot_parse_eof_message(std::istream &is, struct st_eof_package &eof);

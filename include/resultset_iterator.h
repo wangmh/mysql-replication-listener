@@ -22,11 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #define	_RESULTSET_ITERATOR_H
 
 #include <iostream>
+#include <iterator>
+#include <asio.hpp>
 
-// if error; try #include <boost/iterator.hpp>
-#include <boost/iterator/iterator_facade.hpp>
-
-#include <boost/asio.hpp>
 #include "value.h"
 #include "rowset.h"
 #include "row_of_fields.h"
@@ -44,20 +42,20 @@ struct Field_packet
     std::string org_table;// Length Coded String
     std::string name;     // Length Coded String
     std::string org_name; // Length Coded String
-    boost::uint8_t marker;       // filler
-    boost::uint16_t charsetnr;   // charsetnr
-    boost::uint32_t length;      // length
-    boost::uint8_t type;         // field type
-    boost::uint16_t flags;
-    boost::uint8_t decimals;
-    boost::uint16_t filler;      // filler, always 0x00
-    //boost::uint64_t default_value;  // Length coded binary; only in table descr.
+    uint8_t marker;       // filler
+    uint16_t charsetnr;   // charsetnr
+    uint32_t length;      // length
+    uint8_t type;         // field type
+    uint16_t flags;
+    uint8_t decimals;
+    uint16_t filler;      // filler, always 0x00
+    //uint64_t default_value;  // Length coded binary; only in table descr.
 };
 
 typedef std::list<std::string > String_storage;
 
 namespace system {
-    void digest_result_header(std::istream &is, boost::uint64_t &field_count, boost::uint64_t extra);
+    void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extra);
     void digest_field_packet(std::istream &is, Field_packet &field_packet);
     void digest_marker(std::istream &is);
     void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof);
@@ -100,18 +98,17 @@ private:
     /**
      * The number of fields in the field packets block
      */
-    boost::uint64_t m_field_count;
+    uint64_t m_field_count;
     /**
      * Used for SHOW COLUMNS to return the number of rows in the table
      */
-    boost::uint64_t m_extra;
+    uint64_t m_extra;
 };
 
 template <class Iterator_value_type >
 class Result_set_iterator :
-  public boost::iterator_facade<Result_set_iterator<Iterator_value_type >,
-                                Iterator_value_type,
-                                boost::forward_traversal_tag >
+  public std::iterator<std::bidirectional_iterator_tag,
+                                Iterator_value_type>
 {
 public:
     Result_set_iterator() : m_feeder(0), m_current_row(-1)
@@ -123,8 +120,34 @@ public:
       increment();
     }
 
+    Iterator_value_type & operator*()
+    {
+        return m_feeder->m_rows[m_current_row];
+    }
+
+    Result_set_iterator & operator++()
+    {
+        increment();
+        return *this;
+    }
+
+    Result_set_iterator & operator++(int)
+    {
+        increment();
+        return *this;
+    }
+
+    bool operator!=(const Result_set_iterator& it)
+    {
+        return !equal(it);
+    }
+
+    bool operator==(const Result_set_iterator& it)
+    {
+        return equal(it);
+    }
+
  private:
-    friend class boost::iterator_core_access;
 
     void increment()
     {
@@ -166,7 +189,7 @@ public:
         return true;
     }
 
-    Iterator_value_type &dereference() const
+    Iterator_value_type & dereference() const
     {
         return m_feeder->m_rows[m_current_row];
     }

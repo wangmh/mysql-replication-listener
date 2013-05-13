@@ -18,18 +18,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 #include "value.h"
-#include "binlog_event.h"
-#include <boost/lexical_cast.hpp>
 #include <iomanip>
-#include <boost/format.hpp>
+#include "binlog_event.h"
 
 using namespace mysql;
 using namespace mysql::system;
 namespace mysql {
 
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, boost::uint32_t metadata)
+int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint32_t metadata)
 {
-  boost::uint32_t length;
+  uint32_t length;
 
   switch (column_type) {
   case mysql::system::MYSQL_TYPE_VAR_STRING:
@@ -111,8 +109,8 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
       If from_bit_len is not 0, add 1 to the length to account for accurate
       number of bytes needed.
     */
-	boost::uint32_t from_len= (metadata >> 8U) & 0x00ff;
-	boost::uint32_t from_bit_len= metadata & 0x00ff;
+	uint32_t from_len= (metadata >> 8U) & 0x00ff;
+	uint32_t from_bit_len= metadata & 0x00ff;
     //DBUG_ASSERT(from_bit_len <= 7);
     length= from_len + ((from_bit_len > 0) ? 1 : 0);
     break;
@@ -121,7 +119,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
   {
     length= metadata > 255 ? 2 : 1;
 
-    length+= length == 1 ? (boost::uint32_t) *field_ptr : *((boost::uint16_t *)field_ptr);
+    length+= length == 1 ? (uint32_t) *field_ptr : *((uint16_t *)field_ptr);
 
     break;
   }
@@ -134,18 +132,18 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
      switch (metadata)
     {
       case 1:
-        length= 1+ (boost::uint32_t) field_ptr[0];
+        length= 1+ (uint32_t) field_ptr[0];
         break;
       case 2:
-        length= 2+ (boost::uint32_t) (*(boost::uint16_t *)(field_ptr) & 0xFFFF);
+        length= 2+ (uint32_t) (*(uint16_t *)(field_ptr) & 0xFFFF);
         break;
       case 3:
         // TODO make platform indep.
-        length= 3+ (boost::uint32_t) (long) (*((boost::uint32_t *) (field_ptr)) & 0xFFFFFF);
+        length= 3+ (uint32_t) (long) (*((uint32_t *) (field_ptr)) & 0xFFFFFF);
         break;
       case 4:
         // TODO make platform indep.
-        length= 4+ (boost::uint32_t) (long) *((boost::uint32_t *) (field_ptr));
+        length= 4+ (uint32_t) (long) *((uint32_t *) (field_ptr));
         break;
       default:
         length= 0;
@@ -154,7 +152,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
     break;
   }
   default:
-    length= ~(boost::uint32_t) 0;
+    length= ~(uint32_t) 0;
   }
   return length;
 }
@@ -206,22 +204,22 @@ char *Value::as_c_str(unsigned long &size) const
 {
   if (m_is_null || m_size == 0)
   {
-    size= 0;
-    return 0;
+    size = 0;
+    return NULL;
   }
   /*
    Length encoded; First byte is length of string.
   */
-//todo metadata_length 算法
-
 
   int metadata_length= m_metadata > 255 ? 2 : 1;
 
-  std::cout << "m_size " << metadata_length << std::endl;
+  // std::cout << "m_size " << metadata_length << std::endl;
+
   /*
    Size is length of the character string; not of the entire storage
   */
   size= m_size - metadata_length;
+
   return const_cast<char *>(m_storage + metadata_length);
 }
 
@@ -246,56 +244,56 @@ unsigned char *Value::as_blob(unsigned long &size) const
   return (unsigned char *)(m_storage + m_metadata);
 }
 
-boost::int32_t Value::as_int32() const
+int32_t Value::as_int32() const
 {
   if (m_is_null)
   {
     return 0;
   }
-  boost::uint32_t to_int;
-  Protocol_chunk<boost::uint32_t> prot_integer(to_int);
+  uint32_t to_int;
+  Protocol_chunk<uint32_t> prot_integer(to_int);
 
   buffer_source buff(m_storage, m_size);
   buff >> prot_integer;
   return to_int;
 }
 
-boost::int8_t Value::as_int8() const
+int8_t Value::as_int8() const
 {
   if (m_is_null)
   {
     return 0;
   }
-  boost::int8_t to_int;
-  Protocol_chunk<boost::int8_t> prot_integer(to_int);
+  int8_t to_int;
+  Protocol_chunk<int8_t> prot_integer(to_int);
 
   buffer_source buff(m_storage, m_size);
   buff >> prot_integer;
   return to_int;
 }
 
-boost::int16_t Value::as_int16() const
+int16_t Value::as_int16() const
 {
   if (m_is_null)
   {
     return 0;
   }
-  boost::int16_t to_int;
-  Protocol_chunk<boost::int16_t> prot_integer(to_int);
+  int16_t to_int;
+  Protocol_chunk<int16_t> prot_integer(to_int);
 
   buffer_source buff(m_storage, m_size);
   buff >> prot_integer;
   return to_int;
 }
 
-boost::int64_t Value::as_int64() const
+int64_t Value::as_int64() const
 {
   if (m_is_null)
   {
     return 0;
   }
-  boost::int64_t to_int;
-  Protocol_chunk<boost::int64_t> prot_integer(to_int);
+  int64_t to_int;
+  Protocol_chunk<int64_t> prot_integer(to_int);
 
   buffer_source buff(m_storage, m_size);
   buff >> prot_integer;
@@ -318,54 +316,51 @@ void Converter::to(std::string &str, const Value &val) const
 {
   if (val.is_null())
   {
-    str= "NULL";
+    str = "NULL";
     return;
   }
 
+  std::ostringstream os;
   switch(val.type())
   {
     case MYSQL_TYPE_DECIMAL:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
     case MYSQL_TYPE_TINY:
-      str= boost::lexical_cast<std::string>(static_cast<int>(val.as_int8()));
+      os << static_cast<int>(val.as_int8());
       break;
     case MYSQL_TYPE_SHORT:
-      str= boost::lexical_cast<std::string>(val.as_int16());
+      os << val.as_int16();
       break;
     case MYSQL_TYPE_LONG:
-      str= boost::lexical_cast<std::string>(val.as_int32());
+      os << val.as_int32();
       break;
     case MYSQL_TYPE_FLOAT:
-    {
-      str= boost::str(boost::format("%d") % val.as_float());
-    }
+      os << val.as_float();
       break;
     case MYSQL_TYPE_DOUBLE:
-      str= boost::str(boost::format("%d") % val.as_double());
+      os << val.as_double();
       break;
     case MYSQL_TYPE_NULL:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
     case MYSQL_TYPE_TIMESTAMP:
-      str= boost::lexical_cast<std::string>((boost::uint32_t)val.as_int32());
+      os << (uint32_t)val.as_int32();
       break;
-
     case MYSQL_TYPE_LONGLONG:
-      str= boost::lexical_cast<std::string>(val.as_int64());
+      os << val.as_int64();
       break;
     case MYSQL_TYPE_INT24:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
     case MYSQL_TYPE_DATE:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
     case MYSQL_TYPE_DATETIME:
-    {
-      boost::uint64_t timestamp= val.as_int64();
+      {
+      uint64_t timestamp= val.as_int64();
       unsigned long d= timestamp / 1000000;
       unsigned long t= timestamp % 1000000;
-      std::ostringstream os;
 
       os << std::setfill('0') << std::setw(4) << d / 10000
          << std::setw(1) << '-'
@@ -378,52 +373,40 @@ void Converter::to(std::string &str, const Value &val) const
          << std::setw(2) << (t % 10000) / 100
          << std::setw(1) << ':'
          << std::setw(2) << t % 100;
-
-      str= os.str();
-    }
+      }
       break;
     case MYSQL_TYPE_TIME:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_YEAR:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_NEWDATE:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
     case MYSQL_TYPE_VARCHAR:
     {
       unsigned long size;
 
       char *ptr= val.as_c_str(size);
 
-      str.append(ptr, size);
+      str.assign(ptr, size);
     }
-      break;
+      return;
     case MYSQL_TYPE_VAR_STRING:
     {
-      str.append(val.storage(), val.length());
+      str.assign(val.storage(), val.length());
     }
-    break;
+      return;
     case MYSQL_TYPE_STRING:
     {
       unsigned long size;
-      char *ptr= val.as_c_str(size);
-      str.append(ptr, size);
+      char *ptr = val.as_c_str(size);
+      str.assign(ptr, size);
     }
-      break;
+      return;
     case MYSQL_TYPE_BIT:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_NEWDECIMAL:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_ENUM:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_SET:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return ;
     case MYSQL_TYPE_TINY_BLOB:
     case MYSQL_TYPE_MEDIUM_BLOB:
     case MYSQL_TYPE_LONG_BLOB:
@@ -431,16 +414,15 @@ void Converter::to(std::string &str, const Value &val) const
     {
       unsigned long size;
       unsigned char *ptr= val.as_blob(size);
-      str.append((const char *)ptr, size);
+      str.assign((const char *)ptr, size);
     }
-      break;
+      return;
     case MYSQL_TYPE_GEOMETRY:
-      str= "not implemented";
-      break;
     default:
-      str= "not implemented";
-      break;
+      str = "not implemented";
+      return;
   }
+  str = os.str();
 }
 
 void Converter::to(float &out, const Value &val) const
@@ -482,7 +464,7 @@ void Converter::to(long long &out, const Value &val) const
 	      out= 0;
 	      break;
 	    case MYSQL_TYPE_TIMESTAMP:
-	      out=(boost::uint32_t)val.as_int32();
+	      out=(uint32_t)val.as_int32();
 	      break;
 
 	    case MYSQL_TYPE_LONGLONG:
@@ -529,9 +511,10 @@ void Converter::to(long long &out, const Value &val) const
 	      break;
 	    case MYSQL_TYPE_VAR_STRING:
 	    {
-	      std::string str;
-	      str.append(val.storage(), val.length());
-	      out= boost::lexical_cast<long>(str.c_str());
+          std::string str;
+          str.append(val.storage(), val.length());
+          std::istringstream is(str);
+          is >> out;
 	    }
 	      break;
 	    case MYSQL_TYPE_STRING:
@@ -572,7 +555,7 @@ void Converter::to(long &out, const Value &val) const
       out= 0;
       break;
     case MYSQL_TYPE_TIMESTAMP:
-      out=(boost::uint32_t)val.as_int32();
+      out=(uint32_t)val.as_int32();
       break;
 
     case MYSQL_TYPE_LONGLONG:
@@ -621,7 +604,8 @@ void Converter::to(long &out, const Value &val) const
     {
       std::string str;
       str.append(val.storage(), val.length());
-      out= boost::lexical_cast<long>(str.c_str());
+      std::istringstream is(str);
+      is >> out;
     }
       break;
     case MYSQL_TYPE_STRING:
