@@ -59,11 +59,13 @@ public:
       m_size = calc_field_size((unsigned char)type,
                               (const unsigned char*)storage,
                               metadata);
+      // metadata: 16bits, lower byte is real type, high byte is length
       switch(type) {
           case mysql::system::MYSQL_TYPE_SET:
           case mysql::system::MYSQL_TYPE_ENUM:
           case mysql::system::MYSQL_TYPE_STRING:
           {
+            m_type     = (enum system::enum_field_types)(metadata & 0x00ff);
             m_metadata = (metadata >> 8U);
             break;
           }
