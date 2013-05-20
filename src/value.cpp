@@ -412,7 +412,7 @@ void Converter::to(std::string &str, const Value &val) const
     case MYSQL_TYPE_ENUM:
     case MYSQL_TYPE_SET:
       os << (val.length() == 1 ? static_cast<int>(val.as_int8()) : val.as_int16());
-      return ;
+      break;
     case MYSQL_TYPE_TINY_BLOB:
     case MYSQL_TYPE_MEDIUM_BLOB:
     case MYSQL_TYPE_LONG_BLOB:
