@@ -25,9 +25,32 @@ using namespace mysql;
 using namespace mysql::system;
 namespace mysql {
 
-int calc_newdecimal_size(uint8_t m, uint8_t d)
+// calculate mysql NEW DECIMAL digits's size in bytes
+static uint8_t calc_digits_size(uint8_t digits)
 {
-    return 0;
+    uint8_t size = 0;
+
+    while (digits > 9) {
+        digits -= 9;
+        size   += 4;
+    }
+    if (digits >=7) {
+        size   += 4;
+    } else if (digits >= 5 && digits <= 6) {
+        size   += 3;
+    } else if (digits >= 3 && digits <= 4) {
+        size   += 2;
+    } else if (digits >= 1 && digits <= 2) {
+        size   += 1;
+    }
+
+    return size;
+}
+
+uint8_t calc_newdecimal_size(uint8_t m, uint8_t d)
+{
+    // (m - d) is left digits
+    return calc_digits_size(m-d) + calc_digits_size(d);
 }
 
 int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint16_t metadata)
@@ -40,6 +63,8 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
     length = metadata;
     break;
   case mysql::system::MYSQL_TYPE_NEWDECIMAL:
+    // higher byte is number of digits to the right of the decimal point
+    // lower byte is the maximum number of digits
     length = calc_newdecimal_size(metadata & 0xff, metadata >> 8);
     break;
   case mysql::system::MYSQL_TYPE_DECIMAL:
