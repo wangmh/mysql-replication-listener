@@ -25,6 +25,11 @@ using namespace mysql;
 using namespace mysql::system;
 namespace mysql {
 
+int calc_newdecimal_size(uint8_t m, uint8_t d)
+{
+    return 0;
+}
+
 int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint16_t metadata)
 {
   uint32_t length;
@@ -32,12 +37,10 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   switch (column_type) {
   case mysql::system::MYSQL_TYPE_VAR_STRING:
     /* This type is hijacked for result set types. */
-    length= metadata;
+    length = metadata;
     break;
   case mysql::system::MYSQL_TYPE_NEWDECIMAL:
-    //length= my_decimal_get_binary_size(metadata_ptr[col] >> 8,
-    //                                   metadata_ptr[col] & 0xff);
-    length= 0;
+    length = calc_newdecimal_size(metadata & 0xff, metadata >> 8);
     break;
   case mysql::system::MYSQL_TYPE_DECIMAL:
   case mysql::system::MYSQL_TYPE_FLOAT:
