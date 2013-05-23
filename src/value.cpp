@@ -97,7 +97,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   }
   case mysql::system::MYSQL_TYPE_YEAR:
   case mysql::system::MYSQL_TYPE_TINY:
-    length= 1;
+    length = 1;
     break;
   case mysql::system::MYSQL_TYPE_SHORT:
     length= 2;
@@ -348,6 +348,10 @@ void Converter::to(std::string &str, const Value &val) const
 {
   if (val.is_null())
   {
+    str = "NULL";
+    return;
+  }
+  if (!val.storage()) {
     str = "NULL";
     return;
   }
