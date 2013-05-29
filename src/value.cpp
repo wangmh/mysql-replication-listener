@@ -397,14 +397,14 @@ void Converter::to(std::string &str, const Value &val) const
       uint16_t year       = date >> 9;
       date -= (year << 9);
       uint16_t month      = date >> 5;
-      date -= (year << 5);
+      date -= (month << 5);
       uint16_t day        = date;
       os << std::setfill('0') << std::setw(4) << year
          << std::setw(1) << '-'
          << std::setw(2) << month
          << std::setw(1) << '-'
          << std::setw(2) << day;
-      return;
+      break;
       }
     case MYSQL_TYPE_DATETIME:
       {
