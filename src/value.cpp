@@ -426,7 +426,30 @@ void Converter::to(std::string &str, const Value &val) const
       }
       break;
     case MYSQL_TYPE_TIME:
+      {
+      const char *storage = val.storage();
+      uint32_t time       = (storage[0] & 0xff) + ((storage[1] & 0xff) << 8) + ((storage[2] & 0xff) << 16);
+      uint16_t sec        = time % 100;
+      time -= sec;
+      uint16_t min        = (time % 10000) / 100;
+      uint16_t hour       = (time - min)   / 10000;
+      os << std::setfill('0') << std::setw(2) << hour
+         << std::setw(1) << ':'
+         << std::setw(2) << min
+         << std::setw(1) << ':'
+         << std::setw(2) << sec;
+      break;
+      }
     case MYSQL_TYPE_YEAR:
+      {
+      const char *storage = val.storage();
+      uint16_t year       = (storage[0] & 0xff);
+      if (year > 0) {
+          year += 1900;
+      }
+      os << std::setfill('0') << std::setw(4) << year;
+      break;
+      }
     case MYSQL_TYPE_NEWDATE:
       str = "not implemented";
       return;
