@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
 # This configuration file builds both the static and shared version of
 # the library.
 set(replication_sources
@@ -19,9 +18,7 @@ set_target_properties(replication_static PROPERTIES
 add_library(replication_shared SHARED ${replication_sources})
 target_link_libraries(replication_shared crypto pthread)
 
-set_target_properties(
-replication_shared 
-PROPERTIES
+set_target_properties(replication_shared PROPERTIES
 VERSION "${MySQL_BINLOG_VERSION}" SOVERSION 2 OUTPUT_NAME "replication"
 )
 
