@@ -45,17 +45,30 @@ static uint8_t calc_digits_size(uint8_t digits)
     } else if (digits >= 1 && digits <= 2) {
         size   += 1;
     }
-
     return size;
 }
 
 uint8_t calc_newdecimal_size(uint8_t m, uint8_t d)
 {
-    // (m - d) is left digits
-    return calc_digits_size(m-d) + calc_digits_size(d);
+  // unsigned char digits_per_bytes[] = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 4 };  
+  // uint8_t i_digits = m - d;
+  // uint8_t f_digits = d;
+  // uint8_t decimal_full_blocks = i_digits / 9;
+  // uint8_t decimal_last_block_digits = i_digits % 9;
+  // uint8_t scale_full_blocks = f_digits / 9;
+  // uint8_t scale_last_block_digits = f_digits % 9;
+  // uint8_t size = 0;
+
+  // size += decimal_full_blocks * digits_per_bytes[9] + digits_per_bytes[decimal_last_block_digits];
+  // size += scale_full_blocks   * digits_per_bytes[9] + digits_per_bytes[scale_last_block_digits];
+
+  // (m - d) is left digits
+
+  return calc_digits_size(m-d) + calc_digits_size(d);
+  
 }
 
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint16_t metadata)
+uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint32_t metadata)
 {
   uint32_t length;
 
@@ -68,6 +81,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
     // higher byte is number of digits to the right of the decimal point
     // lower byte is the maximum number of digits
     length = calc_newdecimal_size(metadata & 0xff, metadata >> 8);
+    // length = 0;
     break;
   case mysql::system::MYSQL_TYPE_DECIMAL:
   case mysql::system::MYSQL_TYPE_FLOAT:
@@ -83,9 +97,9 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   case mysql::system::MYSQL_TYPE_ENUM:
   case mysql::system::MYSQL_TYPE_STRING:
   {
-    unsigned char type = (metadata & 0x00ff);
+    unsigned char type = metadata >> 8U;
     if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM)) {
-      length = (metadata >> 8U);
+      length = metadata & 0x00ff;
     } else {
       /*
         We are reading the actual size from the master_data record
@@ -133,14 +147,14 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   {
     /*
       Decode the size of the bit field from the master.
-        from_len is the length in bytes from the master
-        from_bit_len is the number of extra bits stored in the master record
+      from_len is the length in bytes from the master
+      from_bit_len is the number of extra bits stored in the master record
       If from_bit_len is not 0, add 1 to the length to account for accurate
       number of bytes needed.
     */
-	uint16_t from_len= (metadata >> 8U) & 0x00ff;
-	uint16_t from_bit_len= metadata & 0x00ff;
-    //DBUG_ASSERT(from_bit_len <= 7);
+    uint32_t from_len= (metadata >> 8U) & 0x00ff;
+    uint32_t from_bit_len= metadata & 0x00ff;
+    // DBUG_ASSERT(from_bit_len <= 7);
     length= from_len + ((from_bit_len > 0) ? 1 : 0);
     break;
   }
@@ -148,7 +162,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   {
     length  = metadata > 255 ? 2 : 1;
 
-    length += length == 1 ? *((uint8_t *)field_ptr) : *((uint16_t *)field_ptr);
+    length += length == 1 ? (uint32_t) *field_ptr : *((uint16_t *)field_ptr);
 
     break;
   }
@@ -158,7 +172,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   case mysql::system::MYSQL_TYPE_BLOB:
   case mysql::system::MYSQL_TYPE_GEOMETRY:
   {
-     switch (metadata)
+    switch (metadata)
     {
       case 1:
         length= 1+ (uint32_t) field_ptr[0];
@@ -359,57 +373,89 @@ void Converter::to(std::string &str, const Value &val) const
   }
 
   std::ostringstream os;
+  
   switch(val.type())
   {
     case MYSQL_TYPE_DECIMAL:
+    {
       str = "not implemented";
-      return;
+      str = os.str();
+      break;
+    }
     case MYSQL_TYPE_TINY:
+    {
       os << static_cast<int>(val.as_int8());
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_SHORT:
+    {
       os << val.as_int16();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_LONG:
+    {
       os << val.as_int32();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_FLOAT:
+    {
       os << val.as_float();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_DOUBLE:
+    {
       os << val.as_double();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_NULL:
+    {
       str = "not implemented";
-      return;
+      str = os.str();
+      break;
+    }
     case MYSQL_TYPE_TIMESTAMP:
+    {
       os << (uint32_t)val.as_int32();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_LONGLONG:
+    {
       os << val.as_int64();
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_INT24:
+    {
       str = "not implemented";
-      return;
+      str = os.str();
+      break;
+    }
     case MYSQL_TYPE_DATE:
-      {
+    {
       const char *storage = val.storage();
       uint32_t date       = (storage[0] & 0xff) + ((storage[1] & 0xff) << 8) + ((storage[2] & 0xff) << 16);
       // actually date occupies 3 bytes, so below will work
-      uint16_t year       = date >> 9;
+      uint32_t year       = date >> 9;
       date -= (year << 9);
-      uint16_t month      = date >> 5;
+      uint32_t month      = date >> 5;
       date -= (month << 5);
-      uint16_t day        = date;
+      uint32_t day        = date;
       os << std::setfill('0') << std::setw(4) << year
          << std::setw(1) << '-'
          << std::setw(2) << month
          << std::setw(1) << '-'
          << std::setw(2) << day;
+      str = os.str();
       break;
-      }
+    }
     case MYSQL_TYPE_DATETIME:
-      {
+    {
       uint64_t timestamp= val.as_int64();
       unsigned long d= timestamp / 1000000;
       unsigned long t= timestamp % 1000000;
@@ -425,57 +471,60 @@ void Converter::to(std::string &str, const Value &val) const
          << std::setw(2) << (t % 10000) / 100
          << std::setw(1) << ':'
          << std::setw(2) << t % 100;
-      }
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_TIME:
       {
       const char *storage = val.storage();
       uint32_t time       = (storage[0] & 0xff) + ((storage[1] & 0xff) << 8) + ((storage[2] & 0xff) << 16);
-      uint16_t sec        = time % 100;
+      uint32_t sec        = time % 100;
       time -= sec;
-      uint16_t min        = (time % 10000) / 100;
-      uint16_t hour       = (time - min)   / 10000;
+      uint32_t min        = (time % 10000) / 100;
+      uint32_t hour       = (time - min)   / 10000;
       os << std::setfill('0') << std::setw(2) << hour
          << std::setw(1) << ':'
          << std::setw(2) << min
          << std::setw(1) << ':'
          << std::setw(2) << sec;
+      str = os.str();
       break;
-      }
+    }
     case MYSQL_TYPE_YEAR:
-      {
+    {
       const char *storage = val.storage();
-      uint16_t year       = (storage[0] & 0xff);
+      uint32_t year       = (storage[0] & 0xff);
       if (year > 0) {
           year += 1900;
       }
       os << std::setfill('0') << std::setw(4) << year;
+      str = os.str();
       break;
-      }
+    }
     case MYSQL_TYPE_NEWDATE:
+    {
       str = "not implemented";
-      return;
+      break;
+    }
     case MYSQL_TYPE_VARCHAR:
     {
       unsigned long size;
-
       char *ptr= val.as_c_str(size);
-
-      str.assign(ptr, size);
+      str.append(ptr, size);
+      break;
     }
-      return;
     case MYSQL_TYPE_VAR_STRING:
     {
-      str.assign(val.storage(), val.length());
+      str.append(val.storage(), val.length());
+      break;
     }
-      return;
     case MYSQL_TYPE_STRING:
     {
       unsigned long size;
       char *ptr = val.as_c_str(size);
-      str.assign(ptr, size);
+      str.append(ptr, size);
+      break;
     }
-      return;
     case MYSQL_TYPE_BIT:
     case MYSQL_TYPE_NEWDECIMAL:
     {
@@ -486,13 +535,16 @@ void Converter::to(std::string &str, const Value &val) const
         decimal.len = sizeof(buffer)/sizeof(decimal_digit_t);
         bin2decimal((const u_char *)val.storage(), &decimal, val.metadata() & 0xff, val.metadata() >> 8);
         decimal2string(&decimal, result, &len, 0, 0, 0);
-        str.assign(result, len);
+        str.append(result, len);
+        break;
     }
-      return;
     case MYSQL_TYPE_ENUM:
     case MYSQL_TYPE_SET:
+    {
       os << (val.length() == 1 ? static_cast<int>(val.as_int8()) : val.as_int16());
+      str = os.str();
       break;
+    }
     case MYSQL_TYPE_TINY_BLOB:
     case MYSQL_TYPE_MEDIUM_BLOB:
     case MYSQL_TYPE_LONG_BLOB:
@@ -500,29 +552,27 @@ void Converter::to(std::string &str, const Value &val) const
     {
       unsigned long size;
       unsigned char *ptr= val.as_blob(size);
-      str.assign((const char *)ptr, size);
+      str.append((const char *)ptr, size);
+      break;
     }
-      return;
     case MYSQL_TYPE_GEOMETRY:
     default:
       str = "not implemented";
-      return;
+      break;
   }
-  str = os.str();
 }
 
 void Converter::to(float &out, const Value &val) const
 {
   switch(val.type())
   {
-  case MYSQL_TYPE_FLOAT:
-    out= val.as_float();
-    break;
-  default:
-    out= 0;
+    case MYSQL_TYPE_FLOAT:
+      out= val.as_float();
+      break;
+    default:
+      out= 0;
   }
 }
-
 
 void Converter::to(long long &out, const Value &val) const
 {
@@ -584,8 +634,8 @@ void Converter::to(long long &out, const Value &val) const
 	      out= 0;
 	      break;
 	    case MYSQL_TYPE_ENUM:
-        case MYSQL_TYPE_SET:
-          out = (val.length() == 1 ? static_cast<int>(val.as_int8()) : val.as_int16());
+            case MYSQL_TYPE_SET:
+              out = (val.length() == 1 ? static_cast<int>(val.as_int8()) : val.as_int16());
 	      break;
 	    case MYSQL_TYPE_TINY_BLOB:
 	    case MYSQL_TYPE_MEDIUM_BLOB:
@@ -595,10 +645,10 @@ void Converter::to(long long &out, const Value &val) const
 	      break;
 	    case MYSQL_TYPE_VAR_STRING:
 	    {
-          std::string str;
-          str.append(val.storage(), val.length());
-          std::istringstream is(str);
-          is >> out;
+              std::string str;
+              str.append(val.storage(), val.length());
+              std::istringstream is(str);
+              is >> out;
 	    }
 	      break;
 	    case MYSQL_TYPE_STRING:

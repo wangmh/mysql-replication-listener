@@ -73,12 +73,10 @@ static int hash_sha1(uint8_t *output, ...);
   {
     if (fetch_master_status(m_socket, &m_binlog_file_name, &m_binlog_offset))
       return 1;
-  } else
-  {
-    m_binlog_file_name=binlog_filename;
-    m_binlog_offset=offset;
+  } else {
+    m_binlog_file_name = binlog_filename;
+    m_binlog_offset    = offset;
   }
-
 
   /* We're ready to start the io service and request the binlog dump. */
   start_binlog_dump(m_binlog_file_name, m_binlog_offset);
@@ -94,31 +92,29 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 
   asio::error_code error = asio::error::host_not_found;
 
-  if (port == 0)
-    port= 3306;
+  if (port == 0) port = 3306;
 
   tcp::socket *socket=new tcp::socket(io_service);
   /*
     Try each endpoint until we successfully establish a connection.
    */
   try {
-  tcp::resolver::iterator endpoint_iterator=resolver.resolve(query);
-  tcp::resolver::iterator end;
+    tcp::resolver::iterator endpoint_iterator=resolver.resolve(query);
+    tcp::resolver::iterator end;
 
-  while (error && endpoint_iterator != end)
-  {
-    /*
-      Hack to set port number from a long int instead of a service.
-     */
-    tcp::endpoint endpoint=endpoint_iterator->endpoint();
-    endpoint.port(port);
+    while (error && endpoint_iterator != end)
+    {
+      /*
+        Hack to set port number from a long int instead of a service.
+        */
+      tcp::endpoint endpoint=endpoint_iterator->endpoint();
+      endpoint.port(port);
 
-    socket->close();
-    socket->connect(endpoint, error);
-    endpoint_iterator++;
-  }
-  } catch(...)
-  {
+      socket->close();
+      socket->connect(endpoint, error);
+      endpoint_iterator++;
+    }
+  } catch(...) {
     return 0;
   }
 
@@ -153,8 +149,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
    * Get server handshake package
    */
   std::streamsize inbuffer=server_messages.in_avail();
-  if (inbuffer < 0)
-    inbuffer=0;
+  if (inbuffer < 0) inbuffer=0;
   asio::read(*socket, server_messages, asio::transfer_at_least(packet_length - inbuffer));
   std::istream server_stream(&server_messages);
 
@@ -162,8 +157,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 
   proto_get_handshake_package(server_stream, handshake_package, packet_length);
 
-  if (authenticate(socket, user, passwd, handshake_package))
-    return 0;
+  if (authenticate(socket, user, passwd, handshake_package)) return 0;
 
   /*
    * Register slave to master
@@ -202,12 +196,11 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 
     // Send the request.
     asio::write(*socket,
-                       asio::buffer(command_packet_header, 4),
-                       asio::transfer_at_least(4));
+                asio::buffer(command_packet_header, 4),
+                asio::transfer_at_least(4));
     asio::write(*socket, server_messages,
-                       asio::transfer_at_least(size));
-  } catch( asio::error_code e)
-  {
+                asio::transfer_at_least(size));
+  } catch( asio::error_code e) {
     return 0;
   }
 
@@ -225,8 +218,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
   {
     struct st_ok_package ok_package;
     prot_parse_ok_message(cmd_response_stream, ok_package, packet_length);
-  } else
-  {
+  } else {
     struct st_error_package error_package;
     prot_parse_error_message(cmd_response_stream, error_package, packet_length);
     return 0;
@@ -284,8 +276,7 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
       m_event_loop = (pthread_t *)malloc(sizeof(pthread_t));
       pthread_attr_t attr;
       pthread_attr_init(&attr);
-      pthread_attr_setdetachstate(&attr,
-                                  PTHREAD_CREATE_JOINABLE);
+      pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       pthread_create(m_event_loop, &attr, &Binlog_tcp_driver::start, (void *)this->thread_data);
   }
 }
@@ -350,13 +341,13 @@ void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size
     hasn't been parsed. If the event stream also contains enough bytes
     we make the assumption that the next bytes waiting in the stream is
     the event header and attempt to parse it.
-   */
+  */
   if (m_waiting_event->event_length == 0 && m_event_stream_buffer.size() >= 19)
   {
     /*
       Copy and remove from the event stream, the remaining bytes might be
       dynamic payload.
-     */
+    */
     //std::cerr << "Consuming event stream for header. Size before: " << m_event_stream_buffer.size() << std::endl;
     proto_event_packet_header(m_event_stream_buffer, m_waiting_event);
     //std::cerr << " Size after: " << m_event_stream_buffer.size() << std::endl;
@@ -438,8 +429,8 @@ void Binlog_tcp_driver::handle_net_packet_header(const asio::error_code& err, st
   read_handler.method     = &Binlog_tcp_driver::handle_net_packet;
   read_handler.tcp_driver = this;
   asio::async_read(*m_socket,
-                          asio::buffer(m_event_packet, packet_length),
-                          read_handler);
+                   asio::buffer(m_event_packet, packet_length),
+                   read_handler);
 }
 
     int authenticate(tcp::socket *socket, const std::string& user, const std::string& passwd,
@@ -537,8 +528,7 @@ int Binlog_tcp_driver::wait_for_next_event(mysql::Binary_log_event **event_ptr)
 {
   // poll for new event until one event is found.
   // return the event
-  if (event_ptr)
-    *event_ptr = 0;
+  if (event_ptr) *event_ptr = 0;
   m_event_queue->pop_back(event_ptr);
   return 0;
 }

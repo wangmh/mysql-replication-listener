@@ -49,12 +49,12 @@ enum Error_code {
 
 class Dummy_driver : public system::Binary_log_driver
 {
-public:
+ public:
   Dummy_driver() : Binary_log_driver("", 0) {}
   virtual ~Dummy_driver() {}
 
   virtual int connect() { return 1; }
-
+  
   virtual int wait_for_next_event(mysql::Binary_log_event **event) {
     return ERR_EOF;
   }
@@ -73,23 +73,22 @@ class Content_handler;
 typedef std::list<Content_handler *> Content_handler_pipeline;
 
 class Binary_log {
-private:
+ private:
   system::Binary_log_driver *m_driver;
   Dummy_driver m_dummy_driver;
   Content_handler_pipeline m_content_handlers;
   unsigned long m_binlog_position;
   std::string m_binlog_file;
-public:
+ public:
   Binary_log(system::Binary_log_driver *drv);
   ~Binary_log() {}
-
+  
   int connect();
 
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
   int wait_for_next_event(Binary_log_event **event);
-
 
   /**
    * Inserts/removes content handlers in and out of the chain
@@ -101,9 +100,9 @@ public:
    * Set the binlog position (filename, position)
    *
    * @return Error_code
-   *  @retval ERR_OK The position is updated.
-   *  @retval ERR_EOF The position is out-of-range
-   *  @retval >= ERR_CODE_COUNT An unspecified error occurred
+   * @retval ERR_OK The position is updated.
+   * @retval ERR_EOF The position is out-of-range
+   * @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
   int set_position(const std::string &filename, unsigned long position);
 
@@ -112,9 +111,9 @@ public:
    * @param position Requested position
    *
    * @return Error_code
-   *  @retval ERR_OK The position is updated.
-   *  @retval ERR_EOF The position is out-of-range
-   *  @retval >= ERR_CODE_COUNT An unspecified error occurred
+   * @retval ERR_OK The position is updated.
+   * @retval ERR_EOF The position is out-of-range
+   * @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
   int set_position(unsigned long position);
 
