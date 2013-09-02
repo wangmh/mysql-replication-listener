@@ -81,19 +81,24 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   */
   case mysql::system::MYSQL_TYPE_SET:
   case mysql::system::MYSQL_TYPE_ENUM:
+  {
+    unsigned char type = (metadata & 0xff);
+    length = (metadata >> 8U);
+    break;
+  }
   case mysql::system::MYSQL_TYPE_STRING:
   {
-    unsigned char type = (metadata & 0x00ff);
-    if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM)) {
-      length = (metadata >> 8U);
+    /*
+      We are reading the actual size from the master_data record
+      because this field has the actual lengh stored in the first
+      byte.
+    */
+    uint8_t lower  = metadata & 0xFF;
+    uint8_t higher = metadata >> 8U;
+    if ((lower & 0x30) != 0x30) {
+      length = (((lower & 0x30) ^ 0x30) << 4) + higher;
     } else {
-      /*
-        We are reading the actual size from the master_data record
-        because this field has the actual lengh stored in the first
-        byte.
-      */
-      length= (unsigned int) *field_ptr+1;
-      //DBUG_ASSERT(length != 0);
+      length = higher;
     }
     break;
   }

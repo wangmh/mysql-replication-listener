@@ -64,9 +64,8 @@ public:
       switch(type) {
           case mysql::system::MYSQL_TYPE_SET:
           case mysql::system::MYSQL_TYPE_ENUM:
-          case mysql::system::MYSQL_TYPE_STRING:
           {
-            m_type     = (enum system::enum_field_types)(metadata & 0x00ff);
+            m_type     = (enum system::enum_field_types)(metadata & 0xff);
             m_metadata = (metadata >> 8U);
             break;
           }

@@ -49,14 +49,12 @@ uint16_t extract_metadata(const Table_map_event *map, int col_no)
   switch(lookup_metadata_field_size((enum mysql::system::enum_field_types)type))
   {
       case 1:
-        metadata = (unsigned char)map->metadata[offset];
+        metadata  = (unsigned char)map->metadata[offset];
       break;
       case 2:
       {
-        unsigned int tmp= ((unsigned char)map->metadata[offset])&0xFF;
-        metadata=  static_cast<uint16_t >(tmp);
-        tmp= (((unsigned char)map->metadata[offset+1])&0xFF) << 8;
-        metadata+= static_cast<uint16_t >(tmp);
+        metadata  = ((unsigned char)map->metadata[offset]) & 0xFF;
+        metadata += ((((unsigned char)map->metadata[offset+1]) & 0xFF) << 8);
       }
       break;
   }
