@@ -96,9 +96,9 @@ uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_p
   case mysql::system::MYSQL_TYPE_SET:
   case mysql::system::MYSQL_TYPE_ENUM:
   {
-    unsigned char type = metadata >> 8U;
+    unsigned char type = (metadata & 0x00ff);
     if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM)) {
-      length = metadata & 0x00ff;
+      length = (metadata >> 8U);
     }
     break;
   }
