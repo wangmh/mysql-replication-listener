@@ -55,7 +55,7 @@ uint8_t calc_newdecimal_size(uint8_t m, uint8_t d)
     return calc_digits_size(m-d) + calc_digits_size(d);
 }
 
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, uint16_t metadata)
+int calc_field_size(enum mysql::system::enum_field_types column_type, const unsigned char *field_ptr, uint16_t metadata)
 {
   uint32_t length;
 
@@ -78,28 +78,30 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
     The cases for SET and ENUM are include for completeness, however
     both are mapped to type MYSQL_TYPE_STRING and their real types
     are encoded in the field metadata.
+
+    THIS WILL NEVER BE EXECUTED.
   */
   case mysql::system::MYSQL_TYPE_SET:
   case mysql::system::MYSQL_TYPE_ENUM:
   {
-    unsigned char type = (metadata & 0xff);
     length = (metadata >> 8U);
     break;
   }
   case mysql::system::MYSQL_TYPE_STRING:
   {
-    /*
-      We are reading the actual size from the master_data record
-      because this field has the actual lengh stored in the first
-      byte.
-    */
-    uint8_t lower  = metadata & 0xFF;
-    uint8_t higher = metadata >> 8U;
-    if ((lower & 0x30) != 0x30) {
-      length = (((lower & 0x30) ^ 0x30) << 4) + higher;
-    } else {
-      length = higher;
+    uint32_t maxlen = 0;
+    uint8_t  lower  = metadata & 0xFF;
+    if (lower == mysql::system::MYSQL_TYPE_SET || lower == mysql::system::MYSQL_TYPE_ENUM) {
+        length = (metadata >> 8U);
+        break;
     }
+    uint8_t  higher = metadata >> 8U;
+    if ((lower & 0x30) != 0x30) {
+      maxlen = (((lower & 0x30) ^ 0x30) << 4) + higher;
+    } else {
+      maxlen = higher;
+    }
+    length = maxlen > 256 ? (uint16_t)(*field_ptr) + 2 : (uint8_t) (*field_ptr) + 1;
     break;
   }
   case mysql::system::MYSQL_TYPE_YEAR:
@@ -190,17 +192,6 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, u
   }
   return length;
 }
-
-/*
-Value::Value(Value &val)
-{
-  m_size= val.length();
-  m_storage= val.storage();
-  m_type= val.type();
-  m_metadata= val.metadata();
-  m_is_null= val.is_null();
-}
-*/
 
 Value::Value(const Value& val)
 {

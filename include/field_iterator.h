@@ -71,8 +71,6 @@ private:
     unsigned long m_field_offset;
 };
 
-
-
 template <class Iterator_value_type>
 size_t Row_event_iterator<Iterator_value_type>::fields(Iterator_value_type& fields_vector )
 {
