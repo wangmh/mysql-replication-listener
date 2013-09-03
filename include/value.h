@@ -62,16 +62,20 @@ public:
                                metadata);
       // metadata: 16bits, lower byte is real type, high byte is length
       switch(type) {
-          case mysql::system::MYSQL_TYPE_SET:
-          case mysql::system::MYSQL_TYPE_ENUM:
-          case mysql::system::MYSQL_TYPE_STRING:
-          {
-            m_type     = (enum system::enum_field_types)(metadata & 0x00ff);
-            m_metadata = (metadata >> 8U);
-            break;
-          }
+        case mysql::system::MYSQL_TYPE_SET:
+        case mysql::system::MYSQL_TYPE_ENUM:
+        {
+          m_type     = (enum system::enum_field_types)(metadata & 0x00ff);
+          m_metadata = (metadata >> 8U);
+          break;
+        }
+        case mysql::system::MYSQL_TYPE_STRING:
+        {
+          m_type = (enum system::enum_field_types)(metadata & 0x00ff | 0x30);
+          break;
+        }
       }
-      //std::cout << "TYPE: " << type << " SIZE: " << m_size << std::endl;
+      // std::cout << "TYPE: " << type << " SIZE: " << m_size << std::endl;
     };
 
     Value()

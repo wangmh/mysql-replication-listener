@@ -95,22 +95,27 @@ uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_p
   */
   case mysql::system::MYSQL_TYPE_SET:
   case mysql::system::MYSQL_TYPE_ENUM:
-  case mysql::system::MYSQL_TYPE_STRING:
   {
     unsigned char type = metadata >> 8U;
     if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM)) {
       length = metadata & 0x00ff;
-    } else {
-      /*
-        We are reading the actual size from the master_data record
-        because this field has the actual lengh stored in the first
-        byte.
-      */
-      length= (unsigned int) *field_ptr+1;
-      //DBUG_ASSERT(length != 0);
     }
     break;
   }
+
+  // case mysql::system::MYSQL_TYPE_STRING:
+  // { 
+  // /*
+  //       We are reading the actual size from the master_data record
+  //       because this field has the actual lengh stored in the first
+  //       byte.
+  //     */
+  //   length= (unsigned int) *field_ptr+1;
+  //   break;
+      
+  //   //DBUG_ASSERT(length != 0);
+  // }
+  
   case mysql::system::MYSQL_TYPE_YEAR:
   case mysql::system::MYSQL_TYPE_TINY:
     length = 1;
@@ -158,6 +163,7 @@ uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_p
     length= from_len + ((from_bit_len > 0) ? 1 : 0);
     break;
   }
+  case mysql::system::MYSQL_TYPE_STRING:
   case mysql::system::MYSQL_TYPE_VARCHAR:
   {
     length  = metadata > 255 ? 2 : 1;
@@ -373,7 +379,7 @@ void Converter::to(std::string &str, const Value &val) const
   }
 
   std::ostringstream os;
-  
+
   switch(val.type())
   {
     case MYSQL_TYPE_DECIMAL:
@@ -523,6 +529,7 @@ void Converter::to(std::string &str, const Value &val) const
       unsigned long size;
       char *ptr = val.as_c_str(size);
       str.append(ptr, size);
+      // std::cout << str << std::endl;
       break;
     }
     case MYSQL_TYPE_BIT:
