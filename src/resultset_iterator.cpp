@@ -110,7 +110,7 @@ void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extr
   //proto_extra.set_length_encoded_binary(true);
 
   is >> proto_field_count;
-     //>> proto_extra;
+  //>> proto_extra;
 }
 
 void digest_field_packet(std::istream &is, Field_packet &field_packet)

@@ -20,56 +20,55 @@
 
 #include "binlog_driver.h"
 
-namespace mysql { namespace system {
+namespace mysql {
 
-/*
-Binary_log_event* Binary_log_driver::parse_event(asio::streambuf
-                                                 &sbuff, Log_event_header
-                                                 *header)
-                                                 */
-Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
-                                                 Log_event_header *header)
-{
-  Binary_log_event *parsed_event= 0;
+  namespace system {
 
-  switch (header->type_code) {
-    case TABLE_MAP_EVENT:
-      parsed_event= proto_table_map_event(is, header);
-      break;
-    case QUERY_EVENT:
-      parsed_event= proto_query_event(is, header);
-      break;
-    case INCIDENT_EVENT:
-      parsed_event= proto_incident_event(is, header);
-      break;
-    case WRITE_ROWS_EVENT:
-    case UPDATE_ROWS_EVENT:
-    case DELETE_ROWS_EVENT:
-      parsed_event= proto_rows_event(is, header);
-      break;
-    case ROTATE_EVENT:
-      {
-        Rotate_event *rot= proto_rotate_event(is, header);
-        m_binlog_file_name= rot->binlog_file;
-        m_binlog_offset= (unsigned long)rot->binlog_pos;
-        parsed_event= rot;
+    /* Binary_log_event* Binary_log_driver::parse_event(asio::streambuf &sbuff, Log_event_header *header) */
+
+    Binary_log_event* Binary_log_driver::parse_event(std::istream &is, Log_event_header *header)
+    {
+      Binary_log_event *parsed_event= 0;
+
+      switch (header->type_code) {
+        case TABLE_MAP_EVENT:
+          parsed_event= proto_table_map_event(is, header);
+          break;
+        case QUERY_EVENT:
+          parsed_event= proto_query_event(is, header);
+          break;
+        case INCIDENT_EVENT:
+          parsed_event= proto_incident_event(is, header);
+          break;
+        case WRITE_ROWS_EVENT:
+        case UPDATE_ROWS_EVENT:
+        case DELETE_ROWS_EVENT:
+          parsed_event= proto_rows_event(is, header);
+          break;
+        case ROTATE_EVENT:
+          {
+            Rotate_event *rot= proto_rotate_event(is, header);
+            m_binlog_file_name= rot->binlog_file;
+            m_binlog_offset= (unsigned long)rot->binlog_pos;
+            parsed_event= rot;
+          }
+          break;
+        case INTVAR_EVENT:
+          parsed_event= proto_intvar_event(is, header);
+          break;
+        case USER_VAR_EVENT:
+          parsed_event= proto_uservar_event(is, header);
+          break;
+        default:
+          {
+            // Create a dummy driver.
+            parsed_event= new Binary_log_event(header);
+          }
       }
-      break;
-    case INTVAR_EVENT:
-      parsed_event= proto_intvar_event(is, header);
-      break;
-    case USER_VAR_EVENT:
-      parsed_event= proto_uservar_event(is, header);
-      break;
-    default:
-      {
-        // Create a dummy driver.
-        parsed_event= new Binary_log_event(header);
-      }
+
+      return parsed_event;
+    }
+    
   }
-
-  return parsed_event;
-}
-
-}
+  
 }

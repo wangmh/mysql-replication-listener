@@ -31,7 +31,7 @@ class Binary_log_driver
 {
 public:
   template <class FilenameT>
-  Binary_log_driver(const FilenameT& filename = FilenameT(), unsigned int offset = 0)
+    Binary_log_driver(const FilenameT& filename = FilenameT(), unsigned int offset = 0)
     : m_binlog_file_name(filename), m_binlog_offset(offset)
   {
   }
