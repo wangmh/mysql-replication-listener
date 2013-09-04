@@ -159,10 +159,9 @@ int calc_field_size(enum mysql::system::enum_field_types column_type, const unsi
       If from_bit_len is not 0, add 1 to the length to account for accurate
       number of bytes needed.
     */
-    uint32_t from_len= (metadata >> 8U) & 0x00ff;
-    uint32_t from_bit_len= metadata & 0x00ff;
-    // DBUG_ASSERT(from_bit_len <= 7);
-    length= from_len + ((from_bit_len > 0) ? 1 : 0);
+    uint8_t from_len     = metadata >> 8U;
+    uint8_t from_bit_len = metadata & 0xff;
+    length = from_len + ((from_bit_len > 0) ? 1 : 0);
     break;
   }
   case mysql::system::MYSQL_TYPE_VARCHAR:
@@ -452,9 +451,9 @@ void Converter::to(std::string &str, const Value &val) const
     }
     case MYSQL_TYPE_DATETIME:
     {
-      uint64_t timestamp= val.as_int64();
-      unsigned long d= timestamp / 1000000;
-      unsigned long t= timestamp % 1000000;
+      uint64_t timestamp = val.as_int64();
+      unsigned long d = timestamp / 1000000;
+      unsigned long t = timestamp % 1000000;
 
       os << std::setfill('0') << std::setw(4) << d / 10000
          << std::setw(1) << '-'

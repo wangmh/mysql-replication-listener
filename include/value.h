@@ -54,7 +54,7 @@ uint8_t calc_newdecimal_size(uint8_t m, uint8_t d);
 class Value
 {
 public:
-    Value(enum system::enum_field_types type, uint32_t metadata, const char *storage) :
+    Value(enum system::enum_field_types type, uint16_t metadata, const char *storage) :
       m_type(type), m_storage(storage), m_metadata(metadata), m_is_null(false)
     {
       m_size = calc_field_size(type,
