@@ -255,16 +255,28 @@ char *Value::as_c_str(unsigned long &size) const
    Length encoded; First byte is length of string.
   */
 
-  int metadata_length = m_size > 251 ? 2 : 1;
-
-  // std::cout << "m_size " << metadata_length << std::endl;
+  uint32_t maxlen = 0;
+  
+  if(m_type == mysql::system::MYSQL_TYPE_STRING) {
+    uint8_t  lower  = m_metadata & 0xFF;
+    uint8_t  higher = m_metadata >> 8U;
+    if ((lower & 0x30) != 0x30) {
+      maxlen = (((lower & 0x30) ^ 0x30) << 4) | higher;
+    } else {
+      maxlen = higher;
+    }
+  } else {
+    maxlen = m_metadata;
+  }
+  
+  int metadata_length = maxlen > 255 ? 2 : 1;
 
   /*
    Size is length of the character string; not of the entire storage
   */
   size = m_size - metadata_length;
 
-  // std::cout << "Len: " << m_size << " Metadata: " << m_metadata << " Size: " << size << std::endl;
+  // std::cout << "Len: " << m_size << " Metadata: " << m_metadata << " Size: " << size << " Max Len: " << maxlen << std::endl;
   
   return const_cast<char *>(m_storage + metadata_length);
 }
