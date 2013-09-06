@@ -111,11 +111,12 @@ int calc_field_size(enum mysql::system::enum_field_types column_type, const unsi
     }
     uint8_t  higher = metadata >> 8U;
     if ((lower & 0x30) != 0x30) {
-      maxlen = (((lower & 0x30) ^ 0x30) << 4) + higher;
+      maxlen = (((lower & 0x30) ^ 0x30) << 4) | higher;
     } else {
       maxlen = higher;
     }
-    length = maxlen > 256 ? (uint16_t)(*field_ptr) + 2 : (uint8_t) (*field_ptr) + 1;
+    length = maxlen >= 256 ? (uint16_t)(*field_ptr) + 2 : (uint8_t) (*field_ptr) + 1;
+    // std::cout << "Len: " << length << std::endl;
     break;
   }
   case mysql::system::MYSQL_TYPE_YEAR:
@@ -241,21 +242,20 @@ bool Value::operator!=(const Value &val) const
 
 char *Value::as_c_str(unsigned long &size) const
 {
-  if (m_is_null || m_size == 0)
-  {
+  if (m_is_null || m_size == 0) {
     size = 0;
     return NULL;
   }
 
   if (m_size == 1) {
-      size = 0;
-      return const_cast<char *>(m_storage);
+    size = 0;
+    return const_cast<char *>(m_storage);
   }
   /*
    Length encoded; First byte is length of string.
   */
 
-  int metadata_length = m_metadata > 255 ? 2 : 1;
+  int metadata_length = m_size > 251 ? 2 : 1;
 
   // std::cout << "m_size " << metadata_length << std::endl;
 
@@ -264,6 +264,8 @@ char *Value::as_c_str(unsigned long &size) const
   */
   size = m_size - metadata_length;
 
+  // std::cout << "Len: " << m_size << " Metadata: " << m_metadata << " Size: " << size << std::endl;
+  
   return const_cast<char *>(m_storage + metadata_length);
 }
 
@@ -519,7 +521,6 @@ void Converter::to(std::string &str, const Value &val) const
       unsigned long size;
       char *ptr = val.as_c_str(size);
       str.append(ptr, size);
-      // std::cout << str << std::endl;
       break;
     }
     case MYSQL_TYPE_BIT:

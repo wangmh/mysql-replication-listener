@@ -164,7 +164,7 @@ class Converter
 {
 public:
 
-	void to(long long &out, const Value &val) const;
+    void to(long long &out, const Value &val) const;
     /**
      * Converts and copies the sql value to a std::string object.
      * @param[out] str The target string
