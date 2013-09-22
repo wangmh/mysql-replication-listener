@@ -118,4 +118,14 @@ int Binary_log::connect()
   return m_driver->connect();
 }
 
+int Binary_log::disconnect()
+{
+  return m_driver->disconnect();
+}
+
+int Binary_log::set_server_id(int server_id)
+{
+  return m_driver->set_server_id(server_id);
+}
+  
 }

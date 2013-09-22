@@ -51,9 +51,15 @@ static int encrypt_password(uint8_t *reply,   /* buffer at least EVP_MAX_MD_SIZE
                             const char *pass);
 static int hash_sha1(uint8_t *output, ...);
 
-    int Binlog_tcp_driver::connect(const std::string& user, const std::string& passwd,
-                                   const std::string& host, long port,
-                                   const std::string& binlog_filename, size_t offset)
+int Binlog_tcp_driver::set_server_id(int server_id)
+{
+  m_server_id = server_id;
+  return m_server_id;
+}
+    
+int Binlog_tcp_driver::connect(const std::string& user, const std::string& passwd,
+                               const std::string& host, long port,
+                               const std::string& binlog_filename, size_t offset)
 {
   m_user=user;
   m_passwd=passwd;
@@ -62,7 +68,7 @@ static int hash_sha1(uint8_t *output, ...);
 
   if (!m_socket)
   {
-    if ((m_socket=sync_connect_and_authenticate(m_io_service, user, passwd, host, port)) == 0)
+    if ((m_socket=sync_connect_and_authenticate(m_io_service, user, passwd, host, port, m_server_id)) == 0)
       return 1;
   }
 
@@ -84,7 +90,7 @@ static int hash_sha1(uint8_t *output, ...);
   return 0;
 }
 
-tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const std::string &user, const std::string &passwd, const std::string &host, long port)
+tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const std::string &user, const std::string &passwd, const std::string &host, long port, int server_id)
 {
 
   tcp::resolver resolver(io_service);
@@ -167,7 +173,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
   Protocol_chunk<uint8_t> prot_command(COM_REGISTER_SLAVE);
   Protocol_chunk<uint16_t> prot_connection_port(port);
   Protocol_chunk<uint32_t> prot_rpl_recovery_rank(0);
-  Protocol_chunk<uint32_t> prot_server_id(1); // slave server-id
+  Protocol_chunk<uint32_t> prot_server_id(server_id); // slave server-id
   /*
    * See document at http://dev.mysql.com/doc/internals/en/replication-protocol.html
    */
@@ -211,7 +217,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 
   uint8_t result_type;
   Protocol_chunk<uint8_t> prot_result_type(result_type);
-
+  //   printf("Result type:\t%x\n", result_type);
   cmd_response_stream >> prot_result_type;
 
   if (result_type == 0)
@@ -237,7 +243,7 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
   Protocol_chunk<uint8_t>  prot_command(COM_BINLOG_DUMP);
   Protocol_chunk<uint32_t> prot_binlog_offset(offset); // binlog position to start at
   Protocol_chunk<uint16_t> prot_binlog_flags(0); // not used
-  Protocol_chunk<uint32_t> prot_server_id(1); // must not be 0; see handshake package
+  Protocol_chunk<uint32_t> prot_server_id(m_server_id); // must not be 0; see handshake package
 
   command_request_stream
           << prot_command
@@ -588,7 +594,7 @@ void Binlog_tcp_driver::reconnect()
   connect(m_user, m_passwd, m_host, m_port);
 }
 
-void Binlog_tcp_driver::disconnect()
+int Binlog_tcp_driver::disconnect()
 {
   Binary_log_event * event;
   m_waiting_event= 0;
@@ -598,9 +604,10 @@ void Binlog_tcp_driver::disconnect()
     m_event_queue->pop_back(&event);
     delete(event);
   }
-  if (m_socket)
-    m_socket->close();
+  if (m_socket) m_socket->close();
   m_socket= 0;
+  
+  return ERR_OK;
 }
 
 
@@ -620,7 +627,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
   asio::io_service io_service;
   tcp::socket *socket;
 
-  if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
+  if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port, m_server_id)) == 0)
     return ERR_FAIL;
 
   std::map<std::string, unsigned long > binlog_map;
@@ -676,7 +683,7 @@ int Binlog_tcp_driver::get_position(std::string *filename_ptr, unsigned long *po
 
   tcp::socket *socket;
 
-  if ((socket=sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
+  if ((socket=sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port, m_server_id)) == 0)
     return ERR_FAIL;
 
   if (fetch_master_status(socket, &m_binlog_file_name, &m_binlog_offset))

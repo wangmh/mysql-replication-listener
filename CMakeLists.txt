@@ -27,5 +27,5 @@ add_subdirectory(src)
 include(InstallRequiredSystemLibraries)
 
 # installation configuration
-install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.ipp")
 
