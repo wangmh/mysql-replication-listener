@@ -606,6 +606,23 @@ int Binlog_tcp_driver::disconnect()
   }
   if (m_socket) m_socket->close();
   m_socket= 0;
+
+  /*
+    By posting to the io service we guarantee that the operations are
+    executed in the same thread as the io_service is running in.
+  */
+  // shut down io service
+  Shutdown_handler shutdown_handler;
+  shutdown_handler.method     = &Binlog_tcp_driver::shutdown;
+  shutdown_handler.tcp_driver = this;
+  m_io_service.post(shutdown_handler);
+
+  // free pthread
+  if (m_event_loop) {
+    pthread_join(*m_event_loop, NULL);
+    free(m_event_loop);
+  }
+  m_event_loop= 0;
   
   return ERR_OK;
 }
@@ -631,7 +648,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     return ERR_FAIL;
 
   std::map<std::string, unsigned long > binlog_map;
-  fetch_binlogs_name_and_size(socket, binlog_map);
+  if(fetch_binlogs_name_and_size(socket, binlog_map)) return ERR_FAIL;
   socket->close();
   delete socket;
 
@@ -655,16 +672,16 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     By posting to the io service we guarantee that the operations are
     executed in the same thread as the io_service is running in.
   */
-  Shutdown_handler shutdown_handler;
-  shutdown_handler.method     = &Binlog_tcp_driver::shutdown;
-  shutdown_handler.tcp_driver = this;
-  m_io_service.post(shutdown_handler);
-  if (m_event_loop)
-  {
-    pthread_join(*m_event_loop, NULL);
-    free(m_event_loop);
-  }
-  m_event_loop= 0;
+  // Shutdown_handler shutdown_handler;
+  // shutdown_handler.method     = &Binlog_tcp_driver::shutdown;
+  // shutdown_handler.tcp_driver = this;
+  // m_io_service.post(shutdown_handler);
+  // if (m_event_loop)
+  // {
+  //   pthread_join(*m_event_loop, NULL);
+  //   free(m_event_loop);
+  // }
+  // m_event_loop= 0;
   disconnect();
   /*
     Uppon return of connect we only know if we succesfully authenticated
