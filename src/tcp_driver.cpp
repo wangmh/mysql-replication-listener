@@ -53,6 +53,9 @@ static int hash_sha1(uint8_t *output, ...);
 
 int Binlog_tcp_driver::set_server_id(int server_id)
 {
+  if(server_id < 0) {
+    server_id = 1;
+  }
   m_server_id = server_id;
   return m_server_id;
 }
@@ -808,6 +811,7 @@ int hash_sha1(uint8_t *output, ...)
     EVP_DigestUpdate(hash_context, data, length);
   }
   EVP_DigestFinal_ex(hash_context, (unsigned char *)output, (unsigned int *)&result);
+  EVP_MD_CTX_destroy(hash_context);
   va_end(ap);
   return result;
 }

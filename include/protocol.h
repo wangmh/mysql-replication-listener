@@ -315,7 +315,7 @@ public:
         m_str= &chunk;
         m_str->assign(size,'*');
     }
-
+    ~ Protocol_chunk_string() {}
     virtual unsigned int size() const { return m_str->size(); }
     virtual const char *data() const { return m_str->data(); }
     virtual void collapse_size(unsigned int new_size)
@@ -379,6 +379,8 @@ public:
     {
         m_storage= &str;
     }
+
+    ~Protocol_chunk_string_len() {}
 
 private:
     friend std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr);
