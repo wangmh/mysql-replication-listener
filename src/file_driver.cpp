@@ -70,6 +70,10 @@ using namespace std;
     return ERR_OK;
   }
 
+  int Binlog_file_driver::set_server_id(int server_id)
+  {
+    return server_id;
+  }
 
   int Binlog_file_driver::set_position(const string &str, unsigned long position)
   {

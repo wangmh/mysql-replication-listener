@@ -44,9 +44,12 @@ public:
    * @retval 0 Success
    * @retval >0 Error code (to be specified)
    */
-  virtual int connect()= 0;
+  virtual int connect() = 0;
 
+  virtual int disconnect() = 0;
 
+  virtual int set_server_id(int server_id) = 0;
+  
   /**
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.

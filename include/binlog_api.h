@@ -54,6 +54,10 @@ class Dummy_driver : public system::Binary_log_driver
   virtual ~Dummy_driver() {}
 
   virtual int connect() { return 1; }
+
+  virtual int disconnect() { return ERR_OK; }
+
+  virtual int set_server_id(int server_id) { return server_id; }
   
   virtual int wait_for_next_event(mysql::Binary_log_event **event) {
     return ERR_EOF;
@@ -66,6 +70,7 @@ class Dummy_driver : public system::Binary_log_driver
   virtual int get_position(std::string *str, unsigned long *position) {
     return ERR_OK;
   }
+
 };
 
 class Content_handler;
@@ -85,6 +90,8 @@ class Binary_log {
   
   int connect();
 
+  int disconnect();
+  
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
@@ -117,6 +124,9 @@ class Binary_log {
    */
   int set_position(unsigned long position);
 
+
+  int set_server_id(int server_id);
+  
   /**
    * Fetch the binlog position for the current file
    */

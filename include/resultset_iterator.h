@@ -52,7 +52,7 @@ struct Field_packet
     //uint64_t default_value;  // Length coded binary; only in table descr.
 };
 
-typedef std::list<std::string > String_storage;
+typedef std::list<std::string *> String_storage;
 
 namespace system {
     void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extra);
@@ -76,6 +76,12 @@ public:
     iterator end();
     const_iterator begin() const;
     const_iterator end() const;
+    ~Result_set() {
+      for (String_storage::iterator it=m_storage.begin(); it != m_storage.end(); ++it) {
+        delete *it;
+      }
+      m_storage.clear();
+    }
 
 private:
     void digest_row_set();
