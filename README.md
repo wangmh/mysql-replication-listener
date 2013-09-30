@@ -4,7 +4,7 @@ MySQL Replication Listener
 A listener to fetch binlog from mysql server.
 
 Reference:
- - Source repo: https://code.launchpad.net/mysql-replication-listener
+ - Origin repo: https://code.launchpad.net/mysql-replication-listener
  - We forked from: https://github.com/wangmh/mysql-replication-listener
 
 Install
