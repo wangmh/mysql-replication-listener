@@ -152,6 +152,11 @@ public:
       return (enum Log_event_type) m_header.type_code;
     }
 
+    uint32_t get_next_position() const
+    {
+      return m_header.next_position;
+    }
+    
     /**
      * Return a pointer to the header of the log event
      */
