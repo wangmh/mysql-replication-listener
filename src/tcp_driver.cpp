@@ -53,8 +53,9 @@ static int hash_sha1(uint8_t *output, ...);
 
 int Binlog_tcp_driver::set_server_id(int server_id)
 {
-  if(server_id < 0) {
-    server_id = 1;
+  if(server_id < 1) {
+    srand((unsigned int)(time(NULL)));
+    server_id = rand() % 10000 + 10000;
   }
   m_server_id = server_id;
   return m_server_id;
