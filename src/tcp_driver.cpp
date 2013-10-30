@@ -201,15 +201,6 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
 
   int size=server_messages.size();
 
-  /*
-  char *contents = new char [size];
-  server_messages.sgetn(contents, size);
-  for (int i = 0; i < size; i++) {
-      printf("%02x:", contents[i]);
-    }
-  delete [] contents;
-  */
-
   char command_packet_header[4];
   try {
     write_packet_header(command_packet_header, size, 0); // packet_no= 0
@@ -735,8 +726,7 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
 
   std::ostream command_request_stream(&server_messages);
 
-  uint8_t command = COM_QUERY;
-  Protocol_chunk<uint8_t> prot_command(command);
+  Protocol_chunk<uint8_t> prot_command(COM_QUERY);
 
   command_request_stream << prot_command
           << "SHOW MASTER STATUS";
@@ -745,7 +735,6 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
   char command_packet_header[4];
   write_packet_header(command_packet_header, size, 0);
 
-  printf("xxxxxxxxxxxxxxxxx\n");
   // Send the request.
   asio::write(*socket, asio::buffer(command_packet_header, 4), asio::transfer_at_least(4));
   asio::write(*socket, server_messages, asio::transfer_at_least(size));
@@ -764,7 +753,6 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
     conv.to(pos, row[1]);
     *position= (unsigned long)pos;
   }
-  printf("xxxxxxxxxxxxxxxxx\n");
   return false;
 }
 
