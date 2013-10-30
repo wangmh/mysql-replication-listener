@@ -220,6 +220,9 @@ class Protocol
 {
 public:
   Protocol() { m_length_encoded_binary= false; }
+
+  virtual ~Protocol() { }
+
   /**
     Return the number of bytes which is read or written by this protocol chunk.
     The default size is equal to the underlying storage data type.
@@ -261,20 +264,23 @@ public:
 
   Protocol_chunk() : Protocol()
   {
-    m_size= 0;
-    m_data= 0;
+    m_size = 0;
+    m_data = 0;
+    m_need_free = true;
   }
 
   Protocol_chunk(T &chunk) : Protocol()
   {
-    m_data= (const char *)&chunk;
-    m_size= sizeof(T);
+    m_size = sizeof(T);
+    m_data = (char *) new char[m_size];
+    std::memcpy(m_data, &chunk, m_size);
   }
 
   Protocol_chunk(const T &chunk) : Protocol ()
   {
-     m_data= (const char *) &chunk;
-     m_size= sizeof(T);
+    m_size = sizeof(T);
+    m_data = (char *) new char[m_size];
+    std::memcpy(m_data, &chunk, m_size);
   }
 
   /**
@@ -286,8 +292,16 @@ public:
    */
   Protocol_chunk(T *buffer, unsigned long size) : Protocol ()
   {
-      m_data= (const char *)buffer;
-      m_size= size;
+      m_data = (char *)buffer;
+      m_size = size;
+      m_need_free = false;
+  }
+
+  virtual ~Protocol_chunk()
+  {
+      if (m_need_free) {
+        delete [] m_data;
+      }
   }
 
   virtual unsigned int size() { return m_size; }
@@ -296,11 +310,14 @@ public:
   {
     //assert(new_size <= m_size);
     memset((char *)m_data+new_size,'\0', m_size-new_size);
-    m_size= new_size;
+    m_size = new_size;
   }
+
 private:
-  const char *m_data;
-  unsigned long m_size;
+
+  char          *m_data;
+  unsigned long  m_size;
+  bool           m_need_free;
 };
 
 std::ostream &operator<<(std::ostream &os, Protocol &chunk);

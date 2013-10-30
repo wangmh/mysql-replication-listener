@@ -318,7 +318,7 @@ std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr)
 std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 {
   if (!os.bad())
-    os.write((const char *) chunk.data(),chunk.size());
+    os.write((const char *) chunk.data(), chunk.size());
   return os;
 }
 
