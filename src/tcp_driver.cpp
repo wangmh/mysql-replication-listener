@@ -174,7 +174,7 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
    */
   std::ostream command_request_stream(&server_messages);
 
-  Protocol_chunk<uint8_t> prot_command(COM_REGISTER_SLAVE);
+  Protocol_chunk<uint8_t> prot_command(COM_REGISTER_SLAVE, NEED_ALLOC);
   Protocol_chunk<uint16_t> prot_connection_port(port);
   Protocol_chunk<uint32_t> prot_rpl_recovery_rank(0);
   Protocol_chunk<uint32_t> prot_server_id(server_id); // slave server-id
@@ -183,9 +183,9 @@ tcp::socket *sync_connect_and_authenticate(asio::io_service &io_service, const s
    */
   Protocol_chunk<uint32_t> prot_master_server_id(0);
 
-  Protocol_chunk<uint8_t> prot_report_host_strlen(host.size());
-  Protocol_chunk<uint8_t> prot_user_strlen(user.size());
-  Protocol_chunk<uint8_t> prot_passwd_strlen(passwd.size());
+  Protocol_chunk<uint8_t> prot_report_host_strlen(host.size(), NEED_ALLOC);
+  Protocol_chunk<uint8_t> prot_user_strlen(user.size(), NEED_ALLOC);
+  Protocol_chunk<uint8_t> prot_passwd_strlen(passwd.size(), NEED_ALLOC);
 
   command_request_stream << prot_command
           << prot_server_id
@@ -245,7 +245,7 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
 
   std::ostream command_request_stream(&server_messages);
 
-  Protocol_chunk<uint8_t>  prot_command(COM_BINLOG_DUMP);
+  Protocol_chunk<uint8_t>  prot_command(COM_BINLOG_DUMP, NEED_ALLOC);
   Protocol_chunk<uint32_t> prot_binlog_offset(offset); // binlog position to start at
   Protocol_chunk<uint16_t> prot_binlog_flags(0); // not used
   Protocol_chunk<uint32_t> prot_server_id(m_server_id); // must not be 0; see handshake package
@@ -308,12 +308,12 @@ static void proto_event_packet_header(asio::streambuf &event_src, Log_event_head
   Protocol_chunk<uint16_t> prot_flags(h->flags);
 
   is >> prot_marker
-          >> prot_timestamp
-          >> prot_type_code
-          >> prot_server_id
-          >> prot_event_length
-          >> prot_next_position
-          >> prot_flags;
+     >> prot_timestamp
+     >> prot_type_code
+     >> prot_server_id
+     >> prot_event_length
+     >> prot_next_position
+     >> prot_flags;
 }
 
 void Binlog_tcp_driver::handle_net_packet(const asio::error_code& err, std::size_t bytes_transferred)
@@ -726,7 +726,7 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
 
   std::ostream command_request_stream(&server_messages);
 
-  Protocol_chunk<uint8_t> prot_command(COM_QUERY);
+  Protocol_chunk<uint8_t> prot_command(COM_QUERY, NEED_ALLOC);
 
   command_request_stream << prot_command
           << "SHOW MASTER STATUS";
@@ -747,7 +747,7 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
           it++)
   {
     Row_of_fields row(*it);
-    *filename= "";
+    *filename = "";
     conv.to(*filename, row[0]);
     long pos;
     conv.to(pos, row[1]);
@@ -762,7 +762,7 @@ bool fetch_binlogs_name_and_size(tcp::socket *socket, std::map<std::string, unsi
 
   std::ostream command_request_stream(&server_messages);
 
-  Protocol_chunk<uint8_t> prot_command(COM_QUERY);
+  Protocol_chunk<uint8_t> prot_command(COM_QUERY, NEED_ALLOC);
 
   command_request_stream << prot_command
           << "SHOW BINARY LOGS";

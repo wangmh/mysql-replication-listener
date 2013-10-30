@@ -165,6 +165,7 @@ enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
 };
 
 
+
 #define int3store(T,A)  do { *(T)=  (unsigned char) ((A));\
                             *(T+1)=(unsigned char) (((unsigned int) (A) >> 8));\
                             *(T+2)=(unsigned char) (((A) >> 16)); } while (0)
@@ -257,6 +258,11 @@ private:
     friend std::istream &operator>>(std::istream &is, std::string &str);
 };
 
+enum enum_pchunk_memory {
+    NEED_NOT_ALLOC,
+    NEED_ALLOC,
+};
+
 template<typename T>
 class Protocol_chunk : public Protocol
 {
@@ -266,21 +272,29 @@ public:
   {
     m_size = 0;
     m_data = 0;
-    m_need_free = true;
+    m_alloc = NEED_NOT_ALLOC;
   }
 
-  Protocol_chunk(T &chunk) : Protocol()
+  Protocol_chunk(T &chunk, enum enum_pchunk_memory alloc = NEED_NOT_ALLOC) : Protocol(), m_alloc(alloc)
   {
     m_size = sizeof(T);
-    m_data = (char *) new char[m_size];
-    std::memcpy(m_data, &chunk, m_size);
+    if (m_alloc == NEED_ALLOC) {
+        m_data = (char *) new char[m_size];
+        std::memcpy(m_data, &chunk, m_size);
+    } else {
+        m_data = (char *) &chunk;
+    }
   }
 
-  Protocol_chunk(const T &chunk) : Protocol ()
+  Protocol_chunk(const T &chunk, enum enum_pchunk_memory alloc = NEED_NOT_ALLOC) : Protocol (), m_alloc(alloc)
   {
     m_size = sizeof(T);
-    m_data = (char *) new char[m_size];
-    std::memcpy(m_data, &chunk, m_size);
+    if (m_alloc == NEED_ALLOC) {
+        m_data = (char *) new char[m_size];
+        std::memcpy(m_data, &chunk, m_size);
+    } else {
+        m_data = (char *) &chunk;
+    }
   }
 
   /**
@@ -292,14 +306,14 @@ public:
    */
   Protocol_chunk(T *buffer, unsigned long size) : Protocol ()
   {
-      m_data = (char *)buffer;
-      m_size = size;
-      m_need_free = false;
+      m_data  = (char *)buffer;
+      m_size  = size;
+      m_alloc = NEED_NOT_ALLOC;
   }
 
   virtual ~Protocol_chunk()
   {
-      if (m_need_free) {
+      if (m_alloc == NEED_ALLOC) {
         delete [] m_data;
       }
   }
@@ -317,7 +331,7 @@ private:
 
   char          *m_data;
   unsigned long  m_size;
-  bool           m_need_free;
+  enum enum_pchunk_memory m_alloc;
 };
 
 std::ostream &operator<<(std::ostream &os, Protocol &chunk);
