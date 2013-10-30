@@ -247,7 +247,7 @@ void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, s
 
   Protocol_chunk<uint8_t>  prot_command(COM_BINLOG_DUMP, NEED_ALLOC);
   Protocol_chunk<uint32_t> prot_binlog_offset(offset, NEED_ALLOC); // binlog position to start at
-  Protocol_chunk<uint16_t> prot_binlog_flags(0); // not used
+  Protocol_chunk<uint16_t> prot_binlog_flags(0, NEED_ALLOC); // not used
   Protocol_chunk<uint32_t> prot_server_id(m_server_id, NEED_ALLOC); // must not be 0; see handshake package
 
   command_request_stream
