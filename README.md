@@ -34,4 +34,5 @@ So If you use MySQL 5.1.63 and earlier, you need **SUPER** privilege too.
 
 Also, We auth privilege before binlog_dump, so we will access database **mysql** for accout checking... That means you have to give at least **READ** privilege for database mysql ...
 
+Also notice that besides `log-bin` and `binlog-format` set in mysqld section, you should also set a `server-id` for mysql master.
 
