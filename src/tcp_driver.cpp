@@ -646,6 +646,11 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     position we won't know if it succeded because the binlog dump is
     running in another thread asynchronously.
   */
+
+  if(position >= m_binlog_offset) {
+    return ERR_FAIL;
+  }
+  
   asio::io_service io_service;
   tcp::socket *socket;
 
