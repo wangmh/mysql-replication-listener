@@ -1,0 +1,17 @@
+language: cpp
+compiler:
+  - gcc
+
+before_install:
+  - echo $LANG
+  - echo $LC_ALL
+  - cmake --version
+  - gcc -v
+
+script:
+  - mkdir build && cd build && cmake .. && make
+
+notifications:
+  email:
+    - guweigang@bullsoft.org
+    - shangyuanchun@bullsoft.org
