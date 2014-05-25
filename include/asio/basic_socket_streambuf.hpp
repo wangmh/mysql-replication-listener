@@ -27,6 +27,22 @@
 # include <boost/preprocessor/repetition/repeat_from_to.hpp>
 # include <boost/utility/base_from_member.hpp>
 #else
+namespace boost {
+    template <typename MemberType, int UniqueID = 0>
+    class base_from_member
+    {
+    protected:
+        MemberType member;
+
+        base_from_member(): member()
+        {
+        }
+    };
+}
+# ifndef BOOST_PP_CAT
+#  define BOOST_PP_CAT(a, b) a ## b
+# endif
+# define BOOST_PP_INC(x) (x)
 #endif
 
 #include "asio/basic_socket.hpp"
