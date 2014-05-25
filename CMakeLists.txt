@@ -15,9 +15,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 include_directories(include)
 link_directories(${PROJECT_BINARY_DIR}/lib)
 
-# TODO: order: find asio -> allow to define asio directory -> use include/asio
-# For ASIO headers
-INCLUDE_DIRECTORIES(include/asio)
+find_package(Boost)
+if(Boost_FOUND)
+    include_directories(Boost_INCLUDE_DIRS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_BOOST")
+else(Boost_FOUND)
+    message(INFO "No Boost found, will not use Boost")
+endif(Boost_FOUND)
 
 # --------- Find crypt ------------------------------------------
 FIND_LIBRARY(LIB_CRYPTO crypto /opt/local/lib /opt/lib /usr/lib /usr/local/lib)

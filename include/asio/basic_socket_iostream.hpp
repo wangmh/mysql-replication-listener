@@ -19,11 +19,15 @@
 
 #if !defined(BOOST_NO_IOSTREAM)
 
-#include <boost/preprocessor/arithmetic/inc.hpp>
-#include <boost/preprocessor/repetition/enum_binary_params.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
-#include <boost/preprocessor/repetition/repeat_from_to.hpp>
-#include <boost/utility/base_from_member.hpp>
+#ifdef HAVE_BOOST
+# include <boost/preprocessor/arithmetic/inc.hpp>
+# include <boost/preprocessor/repetition/enum_binary_params.hpp>
+# include <boost/preprocessor/repetition/enum_params.hpp>
+# include <boost/preprocessor/repetition/repeat_from_to.hpp>
+# include <boost/utility/base_from_member.hpp>
+#else
+#endif
+
 #include "asio/basic_socket_streambuf.hpp"
 #include "asio/stream_socket_service.hpp"
 
