@@ -17,7 +17,7 @@ link_directories(${PROJECT_BINARY_DIR}/lib)
 
 find_package(Boost)
 if(Boost_FOUND)
-    include_directories(Boost_INCLUDE_DIRS)
+    include_directories(${Boost_INCLUDE_DIRS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_BOOST")
 else(Boost_FOUND)
     message(INFO "No Boost found, will not use Boost")
