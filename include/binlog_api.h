@@ -21,6 +21,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _REPEVENT_H
 #define	_REPEVENT_H
 
+// temp fix
+#ifndef HAVE_BOOST
+#define HAVE_BOOST
+#endif
+
 #include <iosfwd>
 #include <list>
 #include <cassert>
