@@ -22,5 +22,9 @@ set_target_properties(replication_shared PROPERTIES
 VERSION "${MySQL_BINLOG_VERSION}" SOVERSION 2 OUTPUT_NAME "replication"
 )
 
+if(APPLE)
+set_target_properties(replication_shared PROPERTIES MACOSX_RPATH ON)
+endif(APPLE)
+
 install(TARGETS replication_shared LIBRARY DESTINATION lib)
 install(TARGETS replication_static ARCHIVE DESTINATION lib)
