@@ -44,12 +44,12 @@ class Binlog_tcp_driver : public Binary_log_driver
 {
 public:
 
-    Binlog_tcp_driver(const std::string& user, const std::string& passwd,
-                      const std::string& host, unsigned long port)
-      : Binary_log_driver("", 4), m_host(host), m_user(user), m_passwd(passwd),
-        m_port(port), m_socket(NULL), m_waiting_event(0), m_event_loop(0),
-        m_total_bytes_transferred(0), m_shutdown(false),
-        m_event_queue(new bounded_buffer<Binary_log_event *>(50))
+ Binlog_tcp_driver(const std::string& user, const std::string& passwd,
+                   const std::string& host, unsigned long port)
+   : Binary_log_driver("", 4), m_host(host), m_user(user), m_passwd(passwd),
+    m_port(port), m_socket(NULL), m_waiting_event(0), m_event_loop(0),
+    m_total_bytes_transferred(0), m_shutdown(false), m_server_id(1),
+    m_event_queue(new bounded_buffer<Binary_log_event *>(50))
     {
     }
 
@@ -77,6 +77,8 @@ public:
 
     int get_position(std::string *str, unsigned long *position);
 
+    int set_server_id(int server_id);
+    
     const std::string& user() const { return m_user; }
     const std::string& password() const { return m_passwd; }
     const std::string& host() const { return m_host; }
@@ -162,7 +164,7 @@ private:
      * this function is called.
      * The event queue is emptied.
      */
-    void disconnect(void);
+    int disconnect();
 
     /**
      * Terminates the io service and sets the shudown flag.
@@ -174,7 +176,8 @@ private:
     asio::io_service m_io_service;
     tcp::socket *m_socket;
     bool m_shutdown;
-
+    // slave server id
+    int m_server_id;
     /**
      * Temporary storage for a handshake package
      */
@@ -216,7 +219,7 @@ private:
      * constructed yet.
      */
     Log_event_header *m_waiting_event;
-    Log_event_header m_log_event_header;
+
     /**
      * A ring buffer used to dispatch aggregated events to the user application
      */
@@ -272,7 +275,7 @@ int authenticate(tcp::socket *socket, const std::string& user,
 
 tcp::socket *
 sync_connect_and_authenticate(asio::io_service &io_service, const std::string &user,
-                              const std::string &passwd, const std::string &host, long port);
+                              const std::string &passwd, const std::string &host, long port, int server_id);
 
 
 } }

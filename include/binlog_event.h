@@ -81,31 +81,32 @@ enum Log_event_type
   DELETE_ROWS_EVENT = 25,
 
   /*
-    Something out of the ordinary happened on the master
+   * Something out of the ordinary happened on the master
    */
   INCIDENT_EVENT= 26,
 
-          /*
-           * A user defined event
-           */
-          USER_DEFINED= 27,
+  /*
+   * A user defined event
+   */
+  USER_DEFINED= 27,
+
   /*
     Add new events here - right above this comment!
     Existing events (except ENUM_END_EVENT) should never change their numbers
   */
 
-
   ENUM_END_EVENT /* end marker */
 };
 
 namespace system {
-/**
- * Convenience function to get the string representation of a binlog event.
- */
-const char* get_event_type_str(Log_event_type type);
+  /**
+   * Convenience function to get the string representation of a binlog event.
+   */
+  const char* get_event_type_str(Log_event_type type);
 } // end namespace system
 
 #define LOG_EVENT_HEADER_SIZE 20
+
 class Log_event_header
 {
 public:
@@ -129,16 +130,16 @@ class Binary_log_event
 public:
     Binary_log_event()
     {
-        /*
-          An event length of 0 indicates that the header isn't initialized
-         */
-        m_header.event_length= 0;
-        m_header.type_code=    0;
+      /*
+        An event length of 0 indicates that the header isn't initialized
+      */
+      m_header.event_length = 0;
+      m_header.type_code    = 0;
     }
 
     Binary_log_event(Log_event_header *header)
     {
-        m_header= *header;
+      m_header= *header;
     }
 
     virtual ~Binary_log_event();
@@ -151,10 +152,17 @@ public:
       return (enum Log_event_type) m_header.type_code;
     }
 
+    uint32_t get_next_position() const
+    {
+      return m_header.next_position;
+    }
+    
     /**
      * Return a pointer to the header of the log event
      */
     Log_event_header *header() { return &m_header; }
+
+    virtual bool is_valid() const { return true; }
 
 private:
     Log_event_header m_header;
@@ -171,6 +179,8 @@ public:
 
     std::string db_name;
     std::string query;
+
+    bool is_valid() const { return query.length() != 0; }
 };
 
 class Rotate_event: public Binary_log_event

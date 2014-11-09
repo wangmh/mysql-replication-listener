@@ -78,10 +78,9 @@ void Result_set::digest_row_set()
          bool is_eof= false;
          Row_of_fields row(0);
          system::digest_row_content(response_stream, m_field_count, row, m_storage, is_eof);
-         if (is_eof)
+         if (is_eof) {
            m_current_state= EOF_PACKET;
-         else
-         {
+         } else {
            m_rows.push_back(row);
            ++m_row_count;
          }
@@ -110,7 +109,7 @@ void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extr
   //proto_extra.set_length_encoded_binary(true);
 
   is >> proto_field_count;
-     //>> proto_extra;
+  //>> proto_extra;
 }
 
 void digest_field_packet(std::istream &is, Field_packet &field_packet)
@@ -154,6 +153,7 @@ void digest_marker(std::istream &is)
 void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof)
 {
   uint8_t size;
+  
   Protocol_chunk<uint8_t> proto_size(size);
   is >> proto_size;
   if (size == 0xfe)
@@ -167,12 +167,18 @@ void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, S
   is.putback((char)size);
   for(int field_no=0; field_no < field_count; ++field_no)
   {
-    std::string *storage= new std::string;
+    // std::string storage_str;
+    std::string *storage_str = new std::string;
 
-    Protocol_chunk_string_len proto_value(*storage);
+    // Protocol_chunk_string_len proto_value(storage_str);
+    Protocol_chunk_string_len proto_value(*storage_str);
+    
     is >> proto_value;
-
-    Value value(MYSQL_TYPE_VAR_STRING, storage->length(), storage->c_str());
+    storage.push_back(storage_str);
+    
+    // Value value(MYSQL_TYPE_VAR_STRING, storage.back().length(), storage.back().c_str());
+    Value value(MYSQL_TYPE_VAR_STRING, storage.back()->length(), storage.back()->c_str());
+    
     row.push_back(value);
   }
 }

@@ -96,18 +96,22 @@ void prot_parse_error_message(std::istream &is, struct st_error_package &err,
                               int packet_length)
 {
   uint8_t marker;
-
+  int message_size;
+  
   Protocol_chunk<uint16_t> prot_errno(err.error_code);
   Protocol_chunk<uint8_t>  prot_marker(marker);
-  Protocol_chunk<uint8_t>  prot_sql_state(err.sql_state,5);
 
   is >> prot_errno
-     >> prot_marker
-     >> prot_sql_state;
+     >> prot_marker;
 
-    // TODO is the number of bytes read = is.tellg() ?
-
-  int message_size= packet_length -2 -1 -5; // the remaining part of the package
+  // TODO is the number of bytes read = is.tellg() ?
+  if(marker == '#') {
+    Protocol_chunk<uint8_t>  prot_sql_state(err.sql_state,5);
+    is >> prot_sql_state;
+    message_size = packet_length - 2 - 1 - 5;
+  } else {
+    message_size= packet_length - 2 - 1; // the remaining part of the package
+  }
   Protocol_chunk_string prot_message(err.message, message_size);
   is >> prot_message;
   err.message[message_size]= '\0';
@@ -115,8 +119,7 @@ void prot_parse_error_message(std::istream &is, struct st_error_package &err,
 
 void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packet_length)
 {
- // TODO: Assure that zero length messages can be but on the input stream.
-
+  // TODO: Assure that zero length messages can be but on the input stream.
   //Protocol_chunk<uint8_t>  prot_result_type(result_type);
   Protocol_chunk<uint64_t> prot_affected_rows(ok.affected_rows);
   Protocol_chunk<uint64_t> prot_insert_id(ok.insert_id);
@@ -315,7 +318,7 @@ std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr)
 std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 {
   if (!os.bad())
-    os.write((const char *) chunk.data(),chunk.size());
+    os.write((const char *) chunk.data(), chunk.size());
   return os;
 }
 
@@ -446,7 +449,7 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
     bytes_read+=used_column_len;
 
   unsigned long row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
-  std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << row_len << std::endl;
+  //std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << row_len << std::endl;
   Protocol_chunk_vector proto_row(rev->row, row_len);
   is >> proto_row;
 

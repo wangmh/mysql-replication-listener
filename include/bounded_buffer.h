@@ -50,7 +50,7 @@ public:
   void push_front(const value_type& item)
   {
     pthread_mutex_lock(&m_mutex);
-    if (m_unread == capacity)
+    while (m_unread == capacity)
         pthread_cond_wait(&m_not_full, &m_mutex);
     for (int i = m_unread; i > 0; i--) {
         m_container[i] = m_container[i-1];

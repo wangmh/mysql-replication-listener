@@ -165,6 +165,7 @@ enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
 };
 
 
+
 #define int3store(T,A)  do { *(T)=  (unsigned char) ((A));\
                             *(T+1)=(unsigned char) (((unsigned int) (A) >> 8));\
                             *(T+2)=(unsigned char) (((A) >> 16)); } while (0)
@@ -220,6 +221,9 @@ class Protocol
 {
 public:
   Protocol() { m_length_encoded_binary= false; }
+
+  virtual ~Protocol() { }
+
   /**
     Return the number of bytes which is read or written by this protocol chunk.
     The default size is equal to the underlying storage data type.
@@ -254,6 +258,11 @@ private:
     friend std::istream &operator>>(std::istream &is, std::string &str);
 };
 
+enum enum_pchunk_memory {
+    NEED_NOT_ALLOC,
+    NEED_ALLOC,
+};
+
 template<typename T>
 class Protocol_chunk : public Protocol
 {
@@ -261,20 +270,31 @@ public:
 
   Protocol_chunk() : Protocol()
   {
-    m_size= 0;
-    m_data= 0;
+    m_size = 0;
+    m_data = 0;
+    m_alloc = NEED_NOT_ALLOC;
   }
 
-  Protocol_chunk(T &chunk) : Protocol()
+  Protocol_chunk(T &chunk, enum enum_pchunk_memory alloc = NEED_NOT_ALLOC) : Protocol(), m_alloc(alloc)
   {
-    m_data= (const char *)&chunk;
-    m_size= sizeof(T);
+    m_size = sizeof(T);
+    if (m_alloc == NEED_ALLOC) {
+        m_data = (char *) new char[m_size];
+        std::memcpy(m_data, &chunk, m_size);
+    } else {
+        m_data = (char *) &chunk;
+    }
   }
 
-  Protocol_chunk(const T &chunk) : Protocol ()
+  Protocol_chunk(const T &chunk, enum enum_pchunk_memory alloc = NEED_NOT_ALLOC) : Protocol (), m_alloc(alloc)
   {
-     m_data= (const char *) &chunk;
-     m_size= sizeof(T);
+    m_size = sizeof(T);
+    if (m_alloc == NEED_ALLOC) {
+        m_data = (char *) new char[m_size];
+        std::memcpy(m_data, &chunk, m_size);
+    } else {
+        m_data = (char *) &chunk;
+    }
   }
 
   /**
@@ -286,8 +306,16 @@ public:
    */
   Protocol_chunk(T *buffer, unsigned long size) : Protocol ()
   {
-      m_data= (const char *)buffer;
-      m_size= size;
+      m_data  = (char *)buffer;
+      m_size  = size;
+      m_alloc = NEED_NOT_ALLOC;
+  }
+
+  virtual ~Protocol_chunk()
+  {
+      if (m_alloc == NEED_ALLOC) {
+        delete [] m_data;
+      }
   }
 
   virtual unsigned int size() { return m_size; }
@@ -296,11 +324,14 @@ public:
   {
     //assert(new_size <= m_size);
     memset((char *)m_data+new_size,'\0', m_size-new_size);
-    m_size= new_size;
+    m_size = new_size;
   }
+
 private:
-  const char *m_data;
-  unsigned long m_size;
+
+  char          *m_data;
+  unsigned long  m_size;
+  enum enum_pchunk_memory m_alloc;
 };
 
 std::ostream &operator<<(std::ostream &os, Protocol &chunk);
@@ -315,7 +346,7 @@ public:
         m_str= &chunk;
         m_str->assign(size,'*');
     }
-
+    ~ Protocol_chunk_string() {}
     virtual unsigned int size() const { return m_str->size(); }
     virtual const char *data() const { return m_str->data(); }
     virtual void collapse_size(unsigned int new_size)
@@ -379,6 +410,8 @@ public:
     {
         m_storage= &str;
     }
+
+    ~Protocol_chunk_string_len() {}
 
 private:
     friend std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr);

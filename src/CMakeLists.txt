@@ -5,10 +5,11 @@ set(replication_sources
   binlog_driver.cpp basic_transaction_parser.cpp tcp_driver.cpp
   file_driver.cpp binary_log.cpp protocol.cpp value.cpp binlog_event.cpp
   resultset_iterator.cpp basic_transaction_parser.cpp
-  basic_content_handler.cpp utilities.cpp)
+  basic_content_handler.cpp utilities.cpp decimal.cpp)
 
 # Configure for building static library
 add_library(replication_static STATIC ${replication_sources})
+set_target_properties(replication_static PROPERTIES COMPILE_FLAGS -fPIC)
 target_link_libraries(replication_static crypto pthread)
 set_target_properties(replication_static PROPERTIES
   OUTPUT_NAME "replication")
@@ -18,8 +19,12 @@ add_library(replication_shared SHARED ${replication_sources})
 target_link_libraries(replication_shared crypto pthread)
 
 set_target_properties(replication_shared PROPERTIES
-  VERSION 0.1 SOVERSION 1
-  OUTPUT_NAME "replication")
+VERSION "${MySQL_BINLOG_VERSION}" SOVERSION 2 OUTPUT_NAME "replication"
+)
+
+if(APPLE)
+set_target_properties(replication_shared PROPERTIES MACOSX_RPATH ON)
+endif(APPLE)
 
 install(TARGETS replication_shared LIBRARY DESTINATION lib)
 install(TARGETS replication_static ARCHIVE DESTINATION lib)

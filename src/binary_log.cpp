@@ -32,9 +32,9 @@ Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_
   if (drv == NULL)
   {
     m_driver= &m_dummy_driver;
+  } else {
+    m_driver= drv;
   }
-  else
-   m_driver= drv;
 }
 
 Content_handler_pipeline *Binary_log::content_handler_pipeline(void)
@@ -56,12 +56,11 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
     {
       event= reinjection_queue.front();
       reinjection_queue.pop_front();
-    }
-    else
-    {
+    } else {
       // Return in case of non-ERR_OK.
-      if(rc= m_driver->wait_for_next_event(&event))
+      if(rc= m_driver->wait_for_next_event(&event)) {
         return rc;
+      }
     }
     m_binlog_position= event->header()->next_position;
     mysql::Content_handler *handler;
@@ -79,8 +78,7 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
     }
   } while(event == 0 || !reinjection_queue.empty());
 
-  if (event_ptr)
-    *event_ptr= event;
+  if (event_ptr) *event_ptr= event;
 
   return 0;
 }
@@ -120,4 +118,14 @@ int Binary_log::connect()
   return m_driver->connect();
 }
 
+int Binary_log::disconnect()
+{
+  return m_driver->disconnect();
+}
+
+int Binary_log::set_server_id(int server_id)
+{
+  return m_driver->set_server_id(server_id);
+}
+  
 }

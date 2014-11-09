@@ -20,11 +20,31 @@
 #if !defined(BOOST_NO_IOSTREAM)
 
 #include <streambuf>
-#include <boost/preprocessor/arithmetic/inc.hpp>
-#include <boost/preprocessor/repetition/enum_binary_params.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
-#include <boost/preprocessor/repetition/repeat_from_to.hpp>
-#include <boost/utility/base_from_member.hpp>
+#ifdef HAVE_BOOST
+# include <boost/preprocessor/arithmetic/inc.hpp>
+# include <boost/preprocessor/repetition/enum_binary_params.hpp>
+# include <boost/preprocessor/repetition/enum_params.hpp>
+# include <boost/preprocessor/repetition/repeat_from_to.hpp>
+# include <boost/utility/base_from_member.hpp>
+#else
+namespace boost {
+    template <typename MemberType, int UniqueID = 0>
+    class base_from_member
+    {
+    protected:
+        MemberType member;
+
+        base_from_member(): member()
+        {
+        }
+    };
+}
+# ifndef BOOST_PP_CAT
+#  define BOOST_PP_CAT(a, b) a ## b
+# endif
+# define BOOST_PP_INC(x) (x)
+#endif
+
 #include "asio/basic_socket.hpp"
 #include "asio/deadline_timer_service.hpp"
 #include "asio/detail/array.hpp"

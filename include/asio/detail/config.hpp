@@ -11,7 +11,19 @@
 #ifndef ASIO_DETAIL_CONFIG_HPP
 #define ASIO_DETAIL_CONFIG_HPP
 
-#include <boost/config.hpp>
+#ifdef HAVE_BOOST
+# include <boost/config.hpp>
+#else
+# if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+#  define BOOST_WINDOWS
+#  if !defined(__GNUC__) && !defined(BOOST_HAS_DECLSPEC)
+#   define BOOST_HAS_DECLSPEC
+#  endif
+#  ifdef _MSC_VER
+#   define BOOST_MSVC _MSC_VER
+#  endif
+# endif
+#endif
 
 // Default to a header-only implementation. The user must specifically request
 // separate compilation by defining either ASIO_SEPARATE_COMPILATION or
