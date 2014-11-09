@@ -1,7 +1,7 @@
 MySQL Replication Listener
 =========================
 
-[![Build Status](https://secure.travis-ci.org/BullSoft/mysql-replication-listener.png?branch=master)](http://travis-ci.org/BullSoft/mysql-replication-listener)
+[![Build Status](https://img.shields.io/travis/BullSoft/mysql-replication-listener/master.svg?style=flat)](http://travis-ci.org/BullSoft/mysql-replication-listener)
 
 A listener to fetch binlog from mysql server.
 
